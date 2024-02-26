@@ -98,18 +98,18 @@ void OnMultLine(int m_ar, int m_br)
 
     Time1 = clock();
 
-	#pragma omp parallel 
+	#pragma omp parallel private(i,j,k) num_threads(8)
 	for(i=0; i<m_ar; i++)
-	{	
-		for( k=0; k<m_br; k++)
-		{
-			#pragma omp for
+		{    
 			for( j=0; j<m_ar; j++)
-			{	
-				phc[i*m_ar + k] += pha[i*m_ar+j] * phb[j*m_br+k];
+			{
+				#pragma omp for 
+				for( k=0; k<m_br; k++)
+				{    
+					phc[i*m_ar + k] += pha[i*m_ar+j] * phb[j*m_br+k];
+				}
 			}
 		}
-	}
 
 
     Time2 = clock();
