@@ -135,7 +135,7 @@ void OnMultLine(int m_ar, int m_br)
 }
 
 // add code here for block x block matriz multiplication
-void OnMultBlock(int m_ar, int m_br, int bkSize)
+double OnMultBlock(int m_ar, int m_br, int bkSize)
 {
     SYSTEMTIME Time1, Time2;
 	
@@ -196,6 +196,8 @@ void OnMultBlock(int m_ar, int m_br, int bkSize)
     free(pha);
     free(phb);
     free(phc);
+
+	return (double)(Time2 - Time1) / CLOCKS_PER_SEC;
 }
 
 
@@ -310,18 +312,18 @@ int main(int argc, char *argv[])
 		if (ret != PAPI_OK)
 			cout << "ERROR: Start PAPI" << endl;
 
-		MyFile << OnMult(2400, 2400) << endl;
-		MyFile << values[0] << endl;
-		MyFile << values[1] << endl;
-		MyFile << values[2] << endl;
-		MyFile << endl;
-
+		MyFile << OnMultBlock(6144, 6144, 128) << endl;
 		
-		
+	
 		
 		ret = PAPI_stop(EventSet, values);
 		if (ret != PAPI_OK)
 			cout << "ERROR: Stop PAPI" << endl;
+
+		MyFile << values[0] << endl;
+		MyFile << values[1] << endl;
+		MyFile << values[2] << endl;
+		MyFile << endl;
 		
 		printf("L1 DCM: %lld \n", values[0]);
 		printf("L2 DCM: %lld \n", values[1]);
