@@ -104,19 +104,19 @@ double OnMultLine(int m_ar, int m_br)
     // Time1 = clock():    
     Time1 = omp_get_wtime();
 
-	// #pragma omp parallel for num_threads(8)
+	// #pragma omp parallel for
 	#pragma omp parallel private(k,j) num_threads(8)
 	for(i=0; i<m_ar; i++)
-		{    
-			for( j=0; j<m_ar; j++)
-			{
-				#pragma omp for 
-				for( k=0; k<m_br; k++)
-				{    
-					phc[i*m_ar + k] += pha[i*m_ar+j] * phb[j*m_br+k];
-				}
+	{	for( j=0; j<m_br; j++)
+		{	temp = 0;
+		#pragma omp for
+			for( k=0; k<m_ar; k++)
+			{	
+				temp += pha[i*m_ar+k] * phb[k*m_br+j];
 			}
+			phc[i*m_ar+j]=temp;
 		}
+	}
 
     // Time2 = clock():    
     Time2 = omp_get_wtime();
