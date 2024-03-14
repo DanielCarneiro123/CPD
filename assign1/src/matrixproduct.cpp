@@ -105,12 +105,12 @@ double OnMultLine(int m_ar, int m_br)
     Time1 = omp_get_wtime();
 
 	// #pragma omp parallel for num_threads(8)
-	#pragma omp parallel private(k,j) num_threads(8)
+	#pragma omp parallel private(i,j,k) num_threads(8)
 	for(i=0; i<m_ar; i++)
 		{    
 			for( j=0; j<m_ar; j++)
 			{
-				#pragma omp for 
+				#pragma omp for private(i,j) 
 				for( k=0; k<m_br; k++)
 				{    
 					phc[i*m_ar + k] += pha[i*m_ar+j] * phb[j*m_br+k];
@@ -310,13 +310,13 @@ int main(int argc, char *argv[])
 	} while (op != 0);
 	*/
 	
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < 20; i++) {
 		std::cout << "\ni = " << i << endl;
 		ret = PAPI_start(EventSet);
 		if (ret != PAPI_OK)
 			cout << "ERROR: Start PAPI" << endl;
 
-		MyFile << OnMultLine(600, 600) << endl;
+		MyFile << OnMultLine(4096, 4096) << endl;
 		
 	
 		
