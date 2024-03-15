@@ -310,13 +310,13 @@ int main(int argc, char *argv[])
 	} while (op != 0);
 	*/
 	
-	for (int i = 0; i < 20; i++) {
+	for (int i = 0; i < 10; i++) {
 		std::cout << "\ni = " << i << endl;
 		ret = PAPI_start(EventSet);
 		if (ret != PAPI_OK)
 			cout << "ERROR: Start PAPI" << endl;
 
-		MyFile << OnMultLine(4096, 4096) << endl;
+		MyFile << OnMultLine(10240, 10240) << endl;
 		
 	
 		
