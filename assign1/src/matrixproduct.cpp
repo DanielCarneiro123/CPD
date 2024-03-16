@@ -101,27 +101,23 @@ double OnMultLine(int m_ar, int m_br)
         for(j=0; j<m_br; j++)
             phb[i*m_br + j] = (double)i+1;
             
-    // Time1 = clock():    
     Time1 = omp_get_wtime();
 
-	// #pragma omp parallel for num_threads(8)
 	#pragma omp parallel private(i,j,k) num_threads(8)
-	for(i=0; i<m_ar; i++)
-		{    
-			for( j=0; j<m_ar; j++)
-			{
-				#pragma omp for private(i,j) 
-				for( k=0; k<m_br; k++)
-				{    
-					phc[i*m_ar + k] += pha[i*m_ar+j] * phb[j*m_br+k];
-				}
-			}
-		}
+    for(i=0; i<m_ar; i++)
+        {    
+            for( j=0; j<m_ar; j++)
+            {
+                #pragma omp for 
+                for( k=0; k<m_br; k++)
+                {    
+                    phc[i*m_ar + k] += pha[i*m_ar+j] * phb[j*m_br+k];
+                }
+            }
+        }
 
-    // Time2 = clock():    
     Time2 = omp_get_wtime();
 	sprintf(st, "Time: %3.5f seconds\n", (double)(Time2-Time1));
-	// sprintf(st, "Time: %3.3f seconds\n", (double)(Time2 - Time1) / CLOCKS_PER_SEC);
 	cout << st;
 
 	// display 10 elements of the result matrix tto verify correctness
@@ -135,7 +131,7 @@ double OnMultLine(int m_ar, int m_br)
     free(pha);
     free(phb);
     free(phc);
-    	return (double)(Time2 - Time1) ;
+    return (double)(Time2 - Time1) ;
 }
 
 // add code here for block x block matriz multiplication
