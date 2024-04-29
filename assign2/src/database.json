@@ -1,0 +1,23 @@
+{"database":[{
+    "players": [
+      {
+        "username": "player1",
+        "password": "c81e728d9d4c2f636f067f89cc14862c", 
+        "elo": 1500,
+        "token": "" 
+      },
+      {
+        "username": "player2",
+        "password": "c81e728d9d4c2f636f067f89cc14862c",
+        "elo": 1600,
+        "token": ""
+      },
+      {
+        "username": "player3",
+        "password": "c81e728d9d4c2f636f067f89cc14862c",
+        "elo": 1400,
+        "token": ""
+      }
+    ]
+  }
+  ]}

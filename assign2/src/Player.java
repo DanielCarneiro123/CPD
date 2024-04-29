@@ -1,6 +1,6 @@
 import java.nio.channels.SocketChannel;
 
-public class Client {
+public class PLayer {
 
     private final String username;
     private final String password;
@@ -9,7 +9,19 @@ public class Client {
     private SocketChannel socket;
     private int timeInQueue = 0;
 
-    Client(String username, String password, String token, Float elo, SocketChannel socket) {
+    public Player(String username, String password, String token, Float elo) {
+        if (username == null || username.isBlank()) {
+            throw new IllegalArgumentException("Username cannot be null or blank");
+        }
+
+        if (password == null || password.isBlank()) {
+            throw new IllegalArgumentException("Password cannot be null or blank");
+        }
+
+        if (elo < 1000) {
+            throw new IllegalArgumentException("Elo cannot be lower than 1000");
+        }
+
         this.username = username;
         this.password = password;
         this.token = token;
@@ -20,21 +32,15 @@ public class Client {
     public String getUsername() {
         return this.username;
     }
-
+    public String getPassword(){
+        return this.password;
+    }
     public Float getElo() {
         return this.elo;
     }
 
-    public void changeElo(Float value) {
-        this.elo += value;
-    }
-
-    public SocketChannel getSocket() {
-        return this.socket;
-    }
-
-    public void setSocket(SocketChannel socket) {
-        this.socket = socket;
+    public void setElo(Float value) {
+        this.elo = value;
     }
 
     public boolean equals(Client client) {
