@@ -2,7 +2,7 @@ import java.net.*;
 import java.io.*;
  
 /**
- * This program demonstrates a simple TCP/IP socket client.
+ * This program demonstrates a simple TCP/IP socket Player.
  *
  * @author www.codejava.net
  */

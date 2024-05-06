@@ -134,14 +134,14 @@ public class Board {
         topRL.setFill(true);
         JPanel top = new JPanel( topRL );
         top.setOpaque(false);
-        chessBoard.add(top, new Float(1));
+        chessBoard.add(top);
 
-        top.add(new JLabel(""), new Float(1));
+        top.add(new JLabel(""));
 
         // fill the top row
         for (int ii = 0; ii < 8; ii++) {
             JLabel label = new JLabel(COLS.substring(ii, ii + 1), SwingConstants.CENTER);
-            top.add(label, new Float(1));
+            top.add(label);
         }
         // fill the black non-pawn piece row
         for (int ii = 0; ii < 8; ii++) {
@@ -151,14 +151,14 @@ public class Board {
             rowRL.setFill(true);
             JPanel row = new JPanel( rowRL );
             row.setOpaque(false);
-            chessBoard.add(row, new Float(1));
+            chessBoard.add(row);
 
             for (int jj = 0; jj < 8; jj++) {
                 switch (jj) {
                     case 0:
-                        row.add(new JLabel("" + (9-(ii + 1)), SwingConstants.CENTER), new Float(1));
+                        row.add(new JLabel("" + (9-(ii + 1)), SwingConstants.CENTER));
                     default:
-                        row.add(chessBoardSquares[jj][ii], new Float(1));
+                        row.add(chessBoardSquares[jj][ii]);
                 }
             }
         }
@@ -215,6 +215,10 @@ public class Board {
     }
 
     public static void main(String[] args) {
+        if (GraphicsEnvironment.isHeadless()) {
+            System.out.println("O sistema está rodando em um ambiente headless.");
+            System.exit(0);
+        }
         Runnable r = new Runnable() {
 
             @Override

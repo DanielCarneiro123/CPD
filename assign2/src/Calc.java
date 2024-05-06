@@ -38,7 +38,7 @@ public class Calc implements Runnable {
                 if (input.equals("exit")) {
                     shared.add(localSum);
                    
-                    /* Write global sum in client */
+                    /* Write global sum in Player */
                     writer.println(shared.getGlobal());
 
                     System.out.println("Global sum after closing this thread: " + shared.getGlobal());
@@ -50,7 +50,7 @@ public class Calc implements Runnable {
                 int n = Integer.parseInt(input);
                 localSum += n;
 
-                /* Write local sum in client */
+                /* Write local sum in Player */
                 writer.println(localSum);    
             }
            

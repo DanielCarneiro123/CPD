@@ -43,7 +43,7 @@ public class PLayer {
         this.elo = value;
     }
 
-    public boolean equals(Client client) {
-        return this.username.equals(client.getUsername());
+    public boolean equals(Player Player) {
+        return this.username.equals(Player.getUsername());
     }
 }
