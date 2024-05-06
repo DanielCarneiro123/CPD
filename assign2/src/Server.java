@@ -41,7 +41,7 @@ public class Server {
     private int token_index;
     private ReentrantLock token_lock;
 
-    private final ServerGUI serverGUI;
+    private final ServerChessGUI serverChessGUI;
 
     public Server(int port, int mode, String filename) throws IOException, ParseException {
 
@@ -61,7 +61,7 @@ public class Server {
         this.token_lock = new ReentrantLock();
         this.time_lock = new ReentrantLock();
 
-        this.serverGUI = new ServerGUI();
+        this.serverChessGUI = new ServerChessGUI();
         this.lastPing = System.currentTimeMillis();
     }
 
@@ -125,7 +125,7 @@ public class Server {
                 Player first = this.waiting_queue.get(i + this.PLAYERS_PER_GAME - 1);
                 Player second = this.waiting_queue.get(i);
 
-                if (first.getRank() - second.getRank() > slack) {
+                if (first.getElo() - second.getElo() > slack) {
                     continue;
                 }
 
@@ -244,7 +244,7 @@ public class Server {
                 if (c.equals(Player)) {
                     c.setSocket(Player.getSocket());
                     System.out.println("Player " + Player.getUsername() + " reconnected. Queue size: " + this.waiting_queue.size());
-                    Server.request(Player.getSocket(), "QUEUE", "You are already in the waiting queue with " + Player.getRank() + " points.");
+                    Server.request(Player.getSocket(), "QUEUE", "You are already in the waiting queue with " + Player.getElo() + " points.");
                     Connection.receive(Player.getSocket());
                     this.waiting_queue_lock.unlock();
                     return;
@@ -252,7 +252,7 @@ public class Server {
             }
 
             this.waiting_queue.add(Player);
-            Server.request(Player.getSocket(), "QUEUE", "You entered in waiting queue with ranking  " + Player.getRank() + " points.");
+            Server.request(Player.getSocket(), "QUEUE", "You entered in waiting queue with ranking  " + Player.getElo() + " points.");
             Connection.receive(Player.getSocket());
             System.out.println("Player " + Player.getUsername() + " is now in waiting queue. Queue size: " + this.waiting_queue.size());
 
@@ -265,7 +265,7 @@ public class Server {
 
     private void sortPlayers() {
         this.waiting_queue_lock.lock();
-        this.waiting_queue.sort(Comparator.comparingLong(Player::getRank));
+        this.waiting_queue.sort(Comparator.comparingLong(Player::getElo));
         this.waiting_queue_lock.unlock();
     }
 
@@ -431,12 +431,12 @@ public class Server {
         for (int i = 0; i < this.waiting_queue.size() && i < 5; i++) {
             waiting_queue[i] = this.waiting_queue.get(i).getUsername();
         }
-        serverGUI.setQueue(String.valueOf(this.waiting_queue.size()), waiting_queue);
+        serverChessGUI.setQueue(String.valueOf(this.waiting_queue.size()), waiting_queue);
         this.waiting_queue_lock.unlock();
-        serverGUI.setGames(String.valueOf(total_games));
+        serverChessGUI.setGames(String.valueOf(total_games));
 
         this.database_lock.lock();
-        serverGUI.setLeaderboard(this.database.getLeaderboard());
+        serverChessGUI.setLeaderboard(this.database.getLeaderboard());
         this.database_lock.unlock();
     }
 
