@@ -9,7 +9,7 @@ public class PLayer {
     private SocketChannel socket;
     private int timeInQueue = 0;
 
-    public Player(String username, String password, String token, Float elo) {
+    public Player(String username, String password, String token, Float elo, SocketChannel socket) {
         if (username == null || username.isBlank()) {
             throw new IllegalArgumentException("Username cannot be null or blank");
         }
@@ -41,6 +41,14 @@ public class PLayer {
 
     public void setElo(Float value) {
         this.elo = value;
+    }
+
+    public SocketChannel getSocket() {
+        return this.socket;
+    }
+
+    public void setSocket(SocketChannel socket) {
+        this.socket = socket;
     }
 
     public boolean equals(Player Player) {

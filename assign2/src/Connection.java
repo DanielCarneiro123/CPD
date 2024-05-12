@@ -9,13 +9,13 @@ import java.util.*;
 
 public class Connection {
 
-    private final int port;                                 // The port number
-    private final String host;                              // The host name or IP address
-    private SocketChannel socket;                           // A SocketChannel for the connection
-    private final String TOKEN_PATH = "Client/tokens/";     // A path to a directory containing tokens
-    private static final String DEFAULT_HOST = "localhost"; // A default host to use if none is provided
-    private final long TIMEOUT = 30000;                     // Timeout to avoid slow clients in milliseconds
-    private MainMenu MainMenu;                            // A GUI to display messages
+    private final int port;                                 
+    private final String host;                            
+    private SocketChannel socket;                           
+    private final String TOKEN_PATH = "tokens/";    
+    private static final String DEFAULT_HOST = "localhost"; 
+    private final long TIMEOUT = 30000;                    
+    private MainMenu MainMenu;                            
     private int authenticationOption = 0;
 
     // Constructor
@@ -26,13 +26,13 @@ public class Connection {
 
     // Method to start the connection
     public void start() throws IOException {
-        this.socket = SocketChannel.open();             // Open a new SocketChannel
-        this.socket.connect(new InetSocketAddress(this.host, this.port)); // Connect to the specified host and port
+        this.socket = SocketChannel.open();             
+        this.socket.connect(new InetSocketAddress(this.host, this.port));
     }
 
     // Method to stop the connection
     public void stop() throws IOException {
-        this.socket.close(); // Close the SocketChannel
+        this.socket.close(); 
     }
 
     // Class usage
@@ -42,20 +42,20 @@ public class Connection {
 
     // Static method to send a message through a SocketChannel
     public static void send(SocketChannel socket, String message) throws Exception {
-        ByteBuffer buffer = ByteBuffer.allocate(1024);      // Create a ByteBuffer with a capacity of 1024 bytes
-        buffer.clear();                                     // Clear the buffer
-        buffer.put(message.getBytes());                     // Put the message into the buffer
-        buffer.flip();                                      // Flip the buffer to prepare it for writing
-        while (buffer.hasRemaining()) {                     // Write the buffer to the socket
+        ByteBuffer buffer = ByteBuffer.allocate(1024);      
+        buffer.clear();                                    
+        buffer.put(message.getBytes());                     
+        buffer.flip();                                      
+        while (buffer.hasRemaining()) {                    
             socket.write(buffer);
         }
     }
 
     // Static method to receive a message from a SocketChannel
     public static String receive(SocketChannel socket) throws Exception {
-        ByteBuffer buffer = ByteBuffer.allocate(1024);          // Create a ByteBuffer with a capacity of 1024 bytes
-        int bytesRead = socket.read(buffer);                    // Read from the socket into the buffer
-        return new String(buffer.array(), 0, bytesRead); // Convert the bytes in the buffer to a String and return it
+        ByteBuffer buffer = ByteBuffer.allocate(1024);         
+        int bytesRead = socket.read(buffer);                   
+        return new String(buffer.array(), 0, bytesRead); 
     }
 
     public String readToken(String filename) {
@@ -119,12 +119,12 @@ public class Connection {
             requestType = serverAnswer[0].toUpperCase();
 
             switch (requestType) {
-                case "OPT" -> { // Option request
+                case "OPT" -> { 
                     String menu = String.join("\n", Arrays.copyOfRange(serverAnswer, 1, serverAnswer.length));
                     System.out.println(menu);
-                    Connection.send(this.socket, this.mainMenuGUI());
+                    Connection.send(this.socket, this.mainMenu());
                 }
-                case "USR" -> { // Data request: username or password
+                case "USR" -> {
 
                     String[] credentials;
 
@@ -234,7 +234,7 @@ public class Connection {
                 case "FIN" -> {
                     Connection.send(this.socket, "ACK");
                 }
-                case "INFO", "TURN", "SCORE" -> { // Player turn. Let's send something to server.
+                case "INFO", "TURN", "SCORE" -> {
                     gameGUI(serverAnswer, requestType);
                     Connection.send(this.socket, "ACK");
                 }
@@ -242,7 +242,7 @@ public class Connection {
                     Connection.send(this.socket, gameOverGUI(serverAnswer[1]));
                 }
                 case "PING" -> {
-                    ; // Doesn't expect an answer back
+                    ; 
                 }
                 default -> System.out.println("Unknown server request type");
             }
