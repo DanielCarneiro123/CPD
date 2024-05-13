@@ -2,14 +2,17 @@ import java.io.*;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.List;
-import java.xml.crypto;
+import java.security.SecureRandom;
+import java.util.Base64;
+import java.util.Collections;
+
 
 class Database {
 
     private final File file;
-    private final StringBuilder database;
+    private final String[] database;
 
-    public Database(String filename) throws IOException, ParseException {
+    public Database(String filename) throws IOException {
 
         this.file = new File(filename);
         if (!file.exists()) {
@@ -41,12 +44,12 @@ class Database {
 
         String[] db = this.database;
         for (String obj : db) {
-            String storedUsername = (String) obj.get(1);
-            String storedPassword = (String) obj.get(2);
+            String[] playerData = obj.split(",");
+            String storedUsername = playerData[0];
+            String storedPassword = playerData[1];
 
-            if (storedUsername.equals(username) && BCrypt.checkpw(password, storedPassword)) {
-                user.put("token", token);
-                Long elo = ((Number) user.get("elo")).longValue();
+            if (storedUsername.equals(username) && password.equals(storedPassword)) {
+                Float elo = Float.parseFloat(playerData[2]);
                 return new Player(username, storedPassword, token, elo, socket);
             }
         }
@@ -55,35 +58,37 @@ class Database {
     }
 
     public Player register(String username, String password, String token, SocketChannel socket) {
-        JSONArray dbArray = (JSONArray) this.database.get("database");
-        if (isUsernameTaken(username, dbArray)) {
+        String[] db = this.database;
+        if (isUsernameTaken(username, db)) {
             return null; 
         }
 
-        JSONObject newPlayer = createPlayer(username, password, token);
-        dbArray.add(newPlayer);
-        this.database.put("database", dbArray);
+        Player newPlayer = createPlayer(username, password, token);
+        db.add(newPlayer);
 
-        return createPlayerObject(username, password, token, 1400, socket);
+        return newPlayer;
     }
 
     public Player reconnecting(String token, SocketChannel socket) {
-        JSONArray dbArray = (JSONArray) this.database.get("database");
-        for (Object obj : dbArray) {
-            JSONObject user = (JSONObject) obj;
-            String storedToken = (String) user.get("token");
+        String[] db = this.database;
+        for (String obj : db) {
+            String[] playerData = obj.split(",");
+            String storedToken = playerData[3];
 
             if (storedToken.equals(token)) {
-                return createPlayerObjectFromJson(user, socket);
+                String username = playerData[0];
+                String password = playerData[1];
+                Float elo = Float.parseFloat(playerData[2]);
+                return new Player(username, password, storedToken, elo, socket);
             }
         }
         return null; 
     }
 
-    private boolean isUsernameTaken(String username, JSONArray dbArray) {
-        for (Object obj : dbArray) {
-            JSONObject user = (JSONObject) obj;
-            String storedUsername = (String) user.get("username");
+    private boolean isUsernameTaken(String username, String[] dbArray) {
+        for (String obj : dbArray) {
+            String[] playerData = obj.split(",");
+            String storedUsername = playerData[0];
             if (storedUsername.equals(username)) {
                 return true;
             }
@@ -91,79 +96,74 @@ class Database {
         return false;
     }
 
-    private JSONObject createPlayer(String username, String password, String token) {
-        JSONObject newPlayer = new JSONObject();
-        String passwordHash = BCrypt.hashpw(password, BCrypt.gensalt());
-        newPlayer.put("username", username);
-        newPlayer.put("password", passwordHash);
-        newPlayer.put("token", token);
-        newPlayer.put("elo", 1400);
+    private Player createPlayer(String username, String password, String token) {
+        
+        String passwordHash = generatePassword(12);
+        Player newPlayer = new Player(username, passwordHash, token, 1400F, null);
         return newPlayer;
     }
 
-    private Player createPlayerObject(String username, String password, String token, int elo, SocketChannel socket) {
-        return new Player(username, password, token, elo, socket);
-    }
-
-    private Player createPlayerObjectFromJson(JSONObject user, SocketChannel socket) {
-        String username = (String) user.get("username");
-        String password = (String) user.get("password");
-        Long elo = ((Number) user.get("elo")).longValue();
-        String token = (String) user.get("token");
-        return new Player(username, password, token, elo, socket);
+    public String generatePassword(int length) {
+        SecureRandom random = new SecureRandom();
+        byte[] bytes = new byte[length];
+        random.nextBytes(bytes);
+        return Base64.getEncoder().encodeToString(bytes);
     }
 
 
-    public void updateElo(Player player, int value) {
-        JSONArray dbArray = (JSONArray) this.database.get("database");
-        for (Object obj : dbArray) {
-            JSONObject user = (JSONObject) obj;
-            String username = (String) user.get("username");
+    public void updateElo(Player player, Float value) {
+        String[] db = this.database;
+        for (String obj : db) {
+            String[] playerData = obj.split(",");
+            String username = playerData[0];
             if (username.equals(player.getUsername())) {
 
-                Long elo = ((Number) user.get("elo")).longValue() + value;
-                user.put("elo", elo);
+                Float elo = Float.parseFloat(playerData[3]) + value;
+                player.setElo(elo);
                 return;
             }
         }
     }
 
     public void invalidToken(Player player) {
-        JSONArray dbArray = (JSONArray) this.database.get("database");
-        for (Object obj : dbArray) {
-            JSONObject user = (JSONObject) obj;
-            String username = (String) user.get("username");
+        String[] db = this.database;
+        for (String obj : db) {
+            String[] playerData = obj.split(",");
+            String username = playerData[0];
 
             if (username.equals(player.getUsername())) {
-                user.put("token", "");
+                player.setToken("");
                 return;
             }
         }
     }
 
+
     public void resetTokens() {
-        JSONArray dbArray = (JSONArray) this.database.get("database");
-        for (Object obj : dbArray) {
-            JSONObject user = (JSONObject) obj;
-            user.put("token", "");
+        String[] db = this.database;
+        for (String obj : db) {
+            String[] playerData = obj.split(",");
+            Player newPlayer = new Player(playerData[0], playerData[1], playerData[2], Float.parseFloat(playerData[3]), null);
         }
     }
 
     public String[] getEloRanks() {
         String[] eloRanking = new String[5];
-        JSONArray dbArray = (JSONArray) this.database.get("database");
-        List<JSONObject> userList = new ArrayList<>();
-        for (Object obj : dbArray) {
-            JSONObject user = (JSONObject) obj;
-            userList.add(user);
-        }
-        userList.sort((a, b) -> Long.compare(((Number) b.get("elo")).longValue(), ((Number) a.get("elo")).longValue()));
+        String[] db = this.database;
+        List<Player> userList = new ArrayList<>();
+        for (String obj : db) {
+            String[] playerData = obj.split(",");
+            Player newPlayer = new Player(playerData[0], playerData[1], playerData[2], Float.parseFloat(playerData[3]), null);
+            userList.add(newPlayer);
+        
+        userList.sort((a, b) -> Float.compare(b.getElo(), a.getElo()));
         for (int i = 0; i < 5 && i < userList.size(); i++) {
-            JSONObject user = userList.get(i);
-            String username = (String) user.get("username");
-            long elo = ((Number) user.get("elo")).longValue();
-            eloRanking[i] = username + " - " + rank;
+            Player user = userList.get(i);
+            String username = user.getUsername();
+            float elo = user.getElo();
+            eloRanking[i] = username + " - " + elo;
         }
         return eloRanking;
+        }
     }
 }

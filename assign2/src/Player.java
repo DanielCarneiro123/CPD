@@ -1,11 +1,10 @@
 import java.nio.channels.SocketChannel;
-import org.json.*;
 
 public class Player {
 
-    private final String username;
-    private final String password;
-    private final String token;
+    private String username;
+    private String password;
+    private String token;
     private Float elo;
     private SocketChannel socket;
     private int timeInQueue = 0;
@@ -38,6 +37,10 @@ public class Player {
     }
     public Float getElo() {
         return this.elo;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 
     public void setElo(Float value) {
