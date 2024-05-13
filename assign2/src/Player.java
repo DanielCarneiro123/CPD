@@ -1,6 +1,7 @@
 import java.nio.channels.SocketChannel;
+import json.jar;
 
-public class PLayer {
+public class Player {
 
     private final String username;
     private final String password;
