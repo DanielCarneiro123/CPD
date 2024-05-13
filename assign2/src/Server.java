@@ -108,7 +108,6 @@ public class Server {
 
             this.threadPoolGame.execute(gameRunnable); 
         }
-        serverStatusGUI();
 
         this.waiting_queue_lock.unlock();
     }
@@ -138,11 +137,9 @@ public class Server {
                 this.threadPoolGame.execute(gameRunnable);
                 this.waiting_queue_lock.unlock();
                 this.resetServerTime();
-                serverStatusGUI();
                 return;
             }
         }
-        serverStatusGUI();
 
         this.waiting_queue_lock.unlock();
     }
@@ -421,24 +418,8 @@ public class Server {
             }
 
         } while (Player == null);
-        serverStatusGUI();
     }
 
-    public void serverStatusGUI() {
-        int total_games = ((ThreadPoolExecutor) threadPoolGame).getActiveCount();
-        this.waiting_queue_lock.lock();
-        String[] waiting_queue = new String[this.waiting_queue.size()];
-        for (int i = 0; i < this.waiting_queue.size() && i < 5; i++) {
-            waiting_queue[i] = this.waiting_queue.get(i).getUsername();
-        }
-        serverChessGUI.setQueue(String.valueOf(this.waiting_queue.size()), waiting_queue);
-        this.waiting_queue_lock.unlock();
-        serverChessGUI.setGames(String.valueOf(total_games));
-
-        this.database_lock.lock();
-        serverChessGUI.setLeaderboard(this.database.getLeaderboard());
-        this.database_lock.unlock();
-    }
 
     public static void main(String[] args) {
 
@@ -462,5 +443,24 @@ public class Server {
         } catch (IOException | ParseException exception) {
             System.out.println("Server exception: " + exception.getMessage());
         }
+    }
+
+    public void game(){
+        Scanner scanner = new Scanner(System.in);
+        Random random = new Random();
+        String[] coinSides = {"Heads", "Tails"};
+
+        System.out.println("Welcome to the Coin Toss Game! Please choose Heads or Tails:");
+        String playerChoice = scanner.nextLine();
+
+        String coinTossResult = coinSides[random.nextInt(2)];
+
+        if (playerChoice.equalsIgnoreCase(coinTossResult)) {
+            System.out.println("Congratulations! You won! The coin landed on " + coinTossResult);
+        } else {
+            System.out.println("Sorry, you lost. The coin landed on " + coinTossResult);
+        }
+
+        scanner.close();
     }
 }

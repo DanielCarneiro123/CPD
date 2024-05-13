@@ -1,4 +1,4 @@
-public Authentication {
+class Authentication {
     private List<Player> players;
     
     public Authentication(){
@@ -23,7 +23,7 @@ public Authentication {
 
                 String token = (String) jsonObject.get("token");
 
-                player= New Player(username,password,token,elo)
+                player= New Player(username,password,token,elo);
 
                 players.append(player);
             }
