@@ -2,18 +2,12 @@ import java.io.*;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.List;
-import json.jar;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-import org.springframework.security.crypto.bcrypt.BCrypt;
-
+import java.xml.crypto;
 
 class Database {
 
     private final File file;
-    private final JSONObject database;
+    private final StringBuilder database;
 
     public Database(String filename) throws IOException, ParseException {
 
@@ -26,34 +20,29 @@ class Database {
         BufferedReader reader = new BufferedReader(new FileReader(file));
         String line;
         while ((line = reader.readLine()) != null) {
-            sb.append(line);
+            sb.append(line.split(","));
         }
         reader.close();
-
-        this.database = (JSONObject) new JSONParser().parse(sb.toString());
+        this.database = sb.toString();
     }
 
     private void createEmptyFile() throws IOException {
-        JSONObject emptyObject = new JSONObject();
-        emptyObject.put("database", new JSONArray());
         FileWriter writer = new FileWriter(this.file);
-        writer.write(emptyObject.toJSONString());
         writer.close();
     }
 
     public void backup() throws IOException {
         FileWriter writer = new FileWriter(this.file);
-        writer.write(this.database.toJSONString());
+        writer.write(this.database);
         writer.close();
     }
 
     public Player login(String username, String password, String token, SocketChannel socket) {
 
-        JSONArray dbArray = (JSONArray) this.database.get("database");
-        for (Object obj : dbArray) {
-            JSONObject user = (JSONObject) obj;
-            String storedUsername = (String) user.get("username");
-            String storedPassword = (String) user.get("password");
+        String[] db = this.database;
+        for (String obj : db) {
+            String storedUsername = (String) obj.get(1);
+            String storedPassword = (String) obj.get(2);
 
             if (storedUsername.equals(username) && BCrypt.checkpw(password, storedPassword)) {
                 user.put("token", token);

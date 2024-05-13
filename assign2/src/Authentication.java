@@ -1,8 +1,4 @@
-import json.jar;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import org.json.*;
 
 
 class Authentication {
@@ -13,22 +9,20 @@ class Authentication {
     }
 
     public List<Player> getPlayers(){
-        JSONParser parser = new JSONParser();
         List<Player> players;
         try {     
-            Object obj = parser.parse(new FileReader("database.json"));
+            String[] db = Database("database.csv");
 
-            for (Object o : a)
+            for (String o : a)
             {
-                JSONObject jsonObject =  (JSONObject) obj;
 
-                String username = (String) jsonObject.get("username");
+                String username = (String) o.get(0);
 
-                String password = (String) jsonObject.get("password");
+                String password = (String) o.get(1);
 
-                int elo = Integer.parseInt((String) jsonObject.get("elo"));
+                int elo = Integer.parseInt((String) o.get(2));
 
-                String token = (String) jsonObject.get("token");
+                String token = (String) o.get(3);
 
                 player= new Player(username,password,token,elo);
 
