@@ -1,15 +1,15 @@
 import java.nio.channels.SocketChannel;
 
-public class PLayer {
+public class Player {
 
-    private final String username;
-    private final String password;
-    private final String token;
+    private String username;
+    private String password;
+    private String token;
     private Float elo;
     private SocketChannel socket;
     private int timeInQueue = 0;
 
-    public Player(String username, String password, String token, Float elo) {
+    public Player(String username, String password, String token, Float elo, SocketChannel socket) {
         if (username == null || username.isBlank()) {
             throw new IllegalArgumentException("Username cannot be null or blank");
         }
@@ -39,8 +39,20 @@ public class PLayer {
         return this.elo;
     }
 
+    public void setToken(String token) {
+        this.token = token;
+    }
+
     public void setElo(Float value) {
         this.elo = value;
+    }
+
+    public SocketChannel getSocket() {
+        return this.socket;
+    }
+
+    public void setSocket(SocketChannel socket) {
+        this.socket = socket;
     }
 
     public boolean equals(Player Player) {

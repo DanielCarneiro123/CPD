@@ -5,10 +5,8 @@ import java.nio.channels.SocketChannel;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.json.simple.parser.ParseException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.locks.ReentrantLock;
-import org.springframework.security.crypto.bcrypt.BCrypt;
 
 public class Server {
 
@@ -41,9 +39,8 @@ public class Server {
     private int token_index;
     private ReentrantLock token_lock;
 
-    private final ServerGUI serverGUI;
 
-    public Server(int port, int mode, String filename) throws IOException, ParseException {
+    public Server(int port, int mode, String filename) throws IOException {
 
         this.port = port;
         this.mode = mode;
@@ -61,7 +58,6 @@ public class Server {
         this.token_lock = new ReentrantLock();
         this.time_lock = new ReentrantLock();
 
-        this.serverGUI = new ServerGUI();
         this.lastPing = System.currentTimeMillis();
     }
 
@@ -108,7 +104,6 @@ public class Server {
 
             this.threadPoolGame.execute(gameRunnable); 
         }
-        serverStatusGUI();
 
         this.waiting_queue_lock.unlock();
     }
@@ -125,7 +120,7 @@ public class Server {
                 Player first = this.waiting_queue.get(i + this.PLAYERS_PER_GAME - 1);
                 Player second = this.waiting_queue.get(i);
 
-                if (first.getRank() - second.getRank() > slack) {
+                if (first.getElo() - second.getElo() > slack) {
                     continue;
                 }
 
@@ -138,11 +133,9 @@ public class Server {
                 this.threadPoolGame.execute(gameRunnable);
                 this.waiting_queue_lock.unlock();
                 this.resetServerTime();
-                serverStatusGUI();
                 return;
             }
         }
-        serverStatusGUI();
 
         this.waiting_queue_lock.unlock();
     }
@@ -244,7 +237,7 @@ public class Server {
                 if (c.equals(Player)) {
                     c.setSocket(Player.getSocket());
                     System.out.println("Player " + Player.getUsername() + " reconnected. Queue size: " + this.waiting_queue.size());
-                    Server.request(Player.getSocket(), "QUEUE", "You are already in the waiting queue with " + Player.getRank() + " points.");
+                    Server.request(Player.getSocket(), "QUEUE", "You are already in the waiting queue with " + Player.getElo() + " points.");
                     Connection.receive(Player.getSocket());
                     this.waiting_queue_lock.unlock();
                     return;
@@ -252,7 +245,7 @@ public class Server {
             }
 
             this.waiting_queue.add(Player);
-            Server.request(Player.getSocket(), "QUEUE", "You entered in waiting queue with ranking  " + Player.getRank() + " points.");
+            Server.request(Player.getSocket(), "QUEUE", "You entered in waiting queue with ranking  " + Player.getElo() + " points.");
             Connection.receive(Player.getSocket());
             System.out.println("Player " + Player.getUsername() + " is now in waiting queue. Queue size: " + this.waiting_queue.size());
 
@@ -265,7 +258,7 @@ public class Server {
 
     private void sortPlayers() {
         this.waiting_queue_lock.lock();
-        this.waiting_queue.sort(Comparator.comparingLong(Player::getRank));
+        this.waiting_queue.sort(Comparator.comparingLong(Player::getElo));
         this.waiting_queue_lock.unlock();
     }
 
@@ -421,24 +414,8 @@ public class Server {
             }
 
         } while (Player == null);
-        serverStatusGUI();
     }
 
-    public void serverStatusGUI() {
-        int total_games = ((ThreadPoolExecutor) threadPoolGame).getActiveCount();
-        this.waiting_queue_lock.lock();
-        String[] waiting_queue = new String[this.waiting_queue.size()];
-        for (int i = 0; i < this.waiting_queue.size() && i < 5; i++) {
-            waiting_queue[i] = this.waiting_queue.get(i).getUsername();
-        }
-        serverGUI.setQueue(String.valueOf(this.waiting_queue.size()), waiting_queue);
-        this.waiting_queue_lock.unlock();
-        serverGUI.setGames(String.valueOf(total_games));
-
-        this.database_lock.lock();
-        serverGUI.setLeaderboard(this.database.getLeaderboard());
-        this.database_lock.unlock();
-    }
 
     public static void main(String[] args) {
 
@@ -462,5 +439,24 @@ public class Server {
         } catch (IOException | ParseException exception) {
             System.out.println("Server exception: " + exception.getMessage());
         }
+    }
+
+    public void game(){
+        Scanner scanner = new Scanner(System.in);
+        Random random = new Random();
+        String[] coinSides = {"Heads", "Tails"};
+
+        System.out.println("Welcome to the Coin Toss Game! Please choose Heads or Tails:");
+        String playerChoice = scanner.nextLine();
+
+        String coinTossResult = coinSides[random.nextInt(2)];
+
+        if (playerChoice.equalsIgnoreCase(coinTossResult)) {
+            System.out.println("Congratulations! You won! The coin landed on " + coinTossResult);
+        } else {
+            System.out.println("Sorry, you lost. The coin landed on " + coinTossResult);
+        }
+
+        scanner.close();
     }
 }
