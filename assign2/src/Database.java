@@ -49,7 +49,7 @@ class Database {
             String storedPassword = playerData[1];
 
             if (storedUsername.equals(username) && password.equals(storedPassword)) {
-                Float elo = Float.parseFloat(playerData[2]);
+                Integer elo = Integer.parseInt(playerData[2]);
                 return new Player(username, storedPassword, token, elo, socket);
             }
         }
@@ -78,7 +78,7 @@ class Database {
             if (storedToken.equals(token)) {
                 String username = playerData[0];
                 String password = playerData[1];
-                Float elo = Float.parseFloat(playerData[2]);
+                Integer elo = Integer.parseInt(playerData[2]);
                 return new Player(username, password, storedToken, elo, socket);
             }
         }
@@ -86,8 +86,7 @@ class Database {
     }
 
     private boolean isUsernameTaken(String username, String[] dbArray) {
-        for (String obj : dbArray) {
-            String[] playerData = obj.split(",");
+        for (String playerData : dbArray) {
             String storedUsername = playerData[0];
             if (storedUsername.equals(username)) {
                 return true;
@@ -111,14 +110,14 @@ class Database {
     }
 
 
-    public void updateElo(Player player, Float value) {
+    public void updateElo(Player player, Integer value) {
         String[] db = this.database;
         for (String obj : db) {
             String[] playerData = obj.split(",");
             String username = playerData[0];
             if (username.equals(player.getUsername())) {
 
-                Float elo = Float.parseFloat(playerData[3]) + value;
+                Integer elo = Integer.parseInt(playerData[3]) + value;
                 player.setElo(elo);
                 return;
             }
@@ -143,7 +142,7 @@ class Database {
         String[] db = this.database;
         for (String obj : db) {
             String[] playerData = obj.split(",");
-            Player newPlayer = new Player(playerData[0], playerData[1], playerData[2], Float.parseFloat(playerData[3]), null);
+            Player newPlayer = new Player(playerData[0], playerData[1], playerData[2], Integer.parseInt(playerData[3]), null);
         }
     }
 
@@ -153,10 +152,10 @@ class Database {
         List<Player> userList = new ArrayList<>();
         for (String obj : db) {
             String[] playerData = obj.split(",");
-            Player newPlayer = new Player(playerData[0], playerData[1], playerData[2], Float.parseFloat(playerData[3]), null);
+            Player newPlayer = new Player(playerData[0], playerData[1], playerData[2], Integer.parseInt(playerData[3]), null);
             userList.add(newPlayer);
         
-        userList.sort((a, b) -> Float.compare(b.getElo(), a.getElo()));
+        userList.sort((a, b) -> Integer.compare(b.getElo(), a.getElo()));
         for (int i = 0; i < 5 && i < userList.size(); i++) {
             Player user = userList.get(i);
             String username = user.getUsername();

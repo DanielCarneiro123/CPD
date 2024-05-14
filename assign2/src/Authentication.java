@@ -1,5 +1,11 @@
-import org.json.*;
-
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.Base64;
+import java.util.Collections;
 
 class Authentication {
     private List<Player> players;
@@ -13,9 +19,8 @@ class Authentication {
         try {     
             String[] db = Database("database.csv");
 
-            for (String o : a)
+            for (String o : db)
             {
-
                 String username = (String) o.get(0);
 
                 String password = (String) o.get(1);
@@ -34,9 +39,7 @@ class Authentication {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
+        } 
     }
 
     public Player getPlayer(String username){
@@ -83,27 +86,20 @@ class Authentication {
         String pass = encryptPass(password);
         Player newPlayer = new Player(username, pass, "", 1400);
         try {
-            JSONObject newPlayerJson = new JSONObject();
-            newPlayerJson.put("username", newPlayer.getUsername());
-            newPlayerJson.put("password", newPlayer.getPassword());
-            newPlayerJson.put("elo", String.valueOf(newPlayer.getElo()));
-            newPlayerJson.put("token", newPlayer.getToken());
+            String[] np = new String[4];
+            np[0] = username;
+            np[1] = pass;
+            np[2] = "1400";
+            np[3] = "";
 
-            JSONParser parser = new JSONParser();
-            Object obj = parser.parse(new FileReader("database.json"));
-            JSONArray jsonArray = (JSONArray) obj;
-            jsonArray.add(newPlayerJson);
+            FileWriter writer = new FileWriter("database.csv");
+            writer.write(np[0] + "," + np[1] + "," + np[2] + "," + np[3] + "\n");
+            writer.close();
 
-            FileWriter fileWriter = new FileWriter("database.json");
-            fileWriter.write(jsonArray.toJSONString());
-            fileWriter.flush();
-            fileWriter.close();
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ParseException e) {
             e.printStackTrace();
         }
         players.add(newPlayer);

@@ -1,4 +1,3 @@
-import org.json.*;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
@@ -8,7 +7,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.locks.ReentrantLock;
-import org.springframework.security.crypto.bcrypt.BCrypt;
 
 public class Server {
 
@@ -41,9 +39,8 @@ public class Server {
     private int token_index;
     private ReentrantLock token_lock;
 
-    private final ServerChessGUI serverChessGUI;
 
-    public Server(int port, int mode, String filename) throws IOException, ParseException {
+    public Server(int port, int mode, String filename) throws IOException {
 
         this.port = port;
         this.mode = mode;
@@ -61,7 +58,6 @@ public class Server {
         this.token_lock = new ReentrantLock();
         this.time_lock = new ReentrantLock();
 
-        this.serverChessGUI = new ServerChessGUI();
         this.lastPing = System.currentTimeMillis();
     }
 
