@@ -1,47 +1,38 @@
 import java.io.*;
-import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.SocketChannel;
 import java.util.*;
 
 public class Connection {
 
     private final int port;                                 
     private final String host;                            
-    private SocketChannel socket;                           
+    private Socket socket;                           
     private final String TOKEN_PATH = "tokens/";    
     private static final String DEFAULT_HOST = "localhost"; 
     private final long TIMEOUT = 30000;                    
     private MainMenu MainMenu;                            
     private int authenticationOption = 0;
 
-    // Constructor
     public Connection(int port, String host) {
         this.port = port;
         this.host = host;
     }
 
-    // Method to start the connection
     public void start() throws IOException {
-        this.socket = SocketChannel.open();             
-        this.socket.connect(new InetSocketAddress(this.host, this.port));
+        this.socket = new Socket(this.host, this.port);
     }
 
-    // Method to stop the connection
     public void stop() throws IOException {
         this.socket.close(); 
     }
 
-    // Class usage
     private static void printUsage() {
         System.out.println("usage: java Connection <PORT> [HOST]");
     }
 
-    // Static method to send a message through a SocketChannel
-    public static void send(SocketChannel socket, String message) throws Exception {
+    // Static method to send a message through a Socket
+    public static void send(Socket socket, String message) throws Exception {
         ByteBuffer buffer = ByteBuffer.allocate(1024);      
         buffer.clear();                                    
         buffer.put(message.getBytes());                     
@@ -51,8 +42,8 @@ public class Connection {
         }
     }
 
-    // Static method to receive a message from a SocketChannel
-    public static String receive(SocketChannel socket) throws Exception {
+    // Static method to receive a message from a Socket
+    public static String receive(Socket socket) throws Exception {
         ByteBuffer buffer = ByteBuffer.allocate(1024);         
         int bytesRead = socket.read(buffer);                   
         return new String(buffer.array(), 0, bytesRead); 
@@ -66,41 +57,37 @@ public class Connection {
 
         File file = new File(this.TOKEN_PATH + filename);
 
-        // Check if the file exists
         if (!file.exists()) {
             System.out.println("File - "+ filename  + " - does not exist");
             return null;
         }
 
-        // Retrieve file content
-        StringBuilder fileContent = new StringBuilder(); // Create StringBuilder to hold file content
+        StringBuilder fileContent = new StringBuilder(); 
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(file)); // Create BufferedReader to read file
+            BufferedReader reader = new BufferedReader(new FileReader(file)); 
             String line;
-            while ((line = reader.readLine()) != null) {    // Read each line of the file
+            while ((line = reader.readLine()) != null) {   
                 fileContent.append(line);
             }
-            reader.close(); // Close the BufferedReader
+            reader.close(); 
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return fileContent.toString(); // Return the file content as a String
+        return fileContent.toString(); 
     }
 
     public void writeToken(String filename, String content) {
 
         try {
-            // Check if the file exists
             File file = new File(this.TOKEN_PATH + filename);
             if (!file.exists()) {
                 file.createNewFile();
             }
 
-            // Update file content
             BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file.getAbsoluteFile()));
-            bufferedWriter.write(content); // Write the content to the file
-            bufferedWriter.close(); // Close the BufferedWriter
+            bufferedWriter.write(content); 
+            bufferedWriter.close(); 
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -142,14 +129,14 @@ public class Connection {
                         Connection.send(this.socket, credentials[0].toLowerCase());
 
                         serverAnswer = Connection.receive(this.socket).split("\n");
-                        requestType = serverAnswer[0].toUpperCase(); // It is going to be PSW
+                        requestType = serverAnswer[0].toUpperCase(); 
 
                         if (!requestType.equals("FIN")) {
                             Connection.send(this.socket, credentials[1]);
                         }
                     }
                 }
-                case "TKN" -> { // Token request: session token value
+                case "TKN" -> {
                     System.out.println(serverAnswer[1]);
                     System.out.println("Token file name: ");
                     String token;
@@ -164,7 +151,7 @@ public class Connection {
                     System.out.println("Token: " + token);
                     Connection.send(this.socket, token == null ? "invalid" : token);
                 }
-                case "NACK" -> { // Handle an error in authentication
+                case "NACK" -> { 
                     System.out.println(serverAnswer[1]);
 
                     if(serverAnswer[1].equals("Username already in use")) {
@@ -173,28 +160,25 @@ public class Connection {
                         invalidCredentials = true;
                     }
 
-                    // If we receive an error authenticating, we will try again the same option chosen before, unless it wasn't chosen yet
-                    // We first need to send the dummy "ACK" to the server, so it can send us the option request again
                     Connection.send(this.socket, "ACK");
 
                     if (authenticationOption > 0) {
                         serverAnswer = Connection.receive(this.socket).split("\n");
                         requestType = serverAnswer[0].toUpperCase();
 
-                        // Retry connection option
                         Connection.send(this.socket,Integer.toString(authenticationOption));
                     }
                 }
-                case "AUTH" -> { // Authentication success. Receive session token value
+                case "AUTH" -> { 
                     System.out.println("Success. Session token was received.");
                     Connection.send(this.socket, "ACK");
                     this.writeToken(serverAnswer[1], serverAnswer[2]);
                 }
-                case "FIN" -> System.out.println(serverAnswer[1]); // If the server brokes the connection
+                case "FIN" -> System.out.println(serverAnswer[1]);
                 default -> System.out.println("Unknown server request type :" + requestType);
             }
         } while (!requestType.equals("AUTH") && !requestType.equals("FIN"));
-        return requestType.equals("AUTH"); // Authentication success?
+        return requestType.equals("AUTH"); 
     }
 
     public void listening() throws Exception {

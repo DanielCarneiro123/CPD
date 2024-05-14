@@ -1,4 +1,5 @@
-import java.nio.channels.SocketChannel;
+import java.net.Socket;
+
 
 public class Player {
 
@@ -6,10 +7,10 @@ public class Player {
     private String password;
     private String token;
     private Float elo;
-    private SocketChannel socket;
+    private Socket socket;
     private int timeInQueue = 0;
 
-    public Player(String username, String password, String token, Float elo, SocketChannel socket) {
+    public Player(String username, String password, Float elo, String token, Socket socket) {
         if (username == null || username.isBlank()) {
             throw new IllegalArgumentException("Username cannot be null or blank");
         }
@@ -38,6 +39,9 @@ public class Player {
     public Float getElo() {
         return this.elo;
     }
+    public String getToken(){
+        return this.token;
+    }
 
     public void setToken(String token) {
         this.token = token;
@@ -47,11 +51,11 @@ public class Player {
         this.elo = value;
     }
 
-    public SocketChannel getSocket() {
+    public Socket getSocket() {
         return this.socket;
     }
 
-    public void setSocket(SocketChannel socket) {
+    public void setSocket(Socket socket) {
         this.socket = socket;
     }
 

@@ -10,37 +10,12 @@ import java.util.Collections;
 class Authentication {
     private List<Player> players;
     
-    public Authentication(){
-        players= getPlayers();
+    public Authentication() throws IOException {
+        players = new ArrayList<>();
+        Database database = new Database("/database.csv");
+        players = database.getPlayers();
     }
 
-    public List<Player> getPlayers(){
-        List<Player> players;
-        try {     
-            String[] db = Database("database.csv");
-
-            for (String o : db)
-            {
-                String username = (String) o.get(0);
-
-                String password = (String) o.get(1);
-
-                int elo = Integer.parseInt((String) o.get(2));
-
-                String token = (String) o.get(3);
-
-                player= new Player(username,password,token,elo);
-
-                players.append(player);
-            }
-
-            return players;
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } 
-    }
 
     public Player getPlayer(String username){
          for (Player player : players) {
@@ -52,7 +27,7 @@ class Authentication {
     }
 
     public Player login(String username, String password){
-        var player= players.getPlayer(username);
+        var player = getPlayer(username);
         if(username == null) {
             return null;
         }
@@ -84,7 +59,7 @@ class Authentication {
             return false;
         }
         String pass = encryptPass(password);
-        Player newPlayer = new Player(username, pass, "", 1400);
+        Player newPlayer = new Player(username, pass, 1400F, "", null);
         try {
             String[] np = new String[4];
             np[0] = username;

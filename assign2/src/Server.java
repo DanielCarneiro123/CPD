@@ -1,7 +1,7 @@
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.ServerSocket;
+import java.nio.channels.Socket;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -12,7 +12,7 @@ public class Server {
 
     private final int port;
     private final int mode;
-    private ServerSocketChannel serverSocket;
+    private ServerSocket serverSocket;
     private final ExecutorService threadPoolGame;
     private final ExecutorService threadPoolAuth;
     private int time;
@@ -71,7 +71,7 @@ public class Server {
     }
 
     public void start() throws IOException {
-        this.serverSocket = ServerSocketChannel.open();
+        this.serverSocket = ServerSocket.open();
         serverSocket.bind(new InetSocketAddress(this.port));
         System.out.println("Server is listening on port " + this.port + " with " + (this.mode == 1 ? "rank" : "simple") + " mode");
     }
@@ -150,7 +150,7 @@ public class Server {
     private void connectionAuthenticator() {
         while (true) {
             try {
-                SocketChannel PlayerSocket = this.serverSocket.accept();
+                Socket PlayerSocket = this.serverSocket.accept();
                 System.out.println("Player connected: " + PlayerSocket.getRemoteAddress());
 
                 Runnable newPlayerRunnable = () -> {
@@ -262,7 +262,7 @@ public class Server {
         this.waiting_queue_lock.unlock();
     }
 
-    public Player login(SocketChannel PlayerSocket, String username, String password) throws Exception {
+    public Player login(Socket PlayerSocket, String username, String password) throws Exception {
 
         if (Objects.equals(username, "BACK") || Objects.equals(password, "BACK"))
             return null;
@@ -292,7 +292,7 @@ public class Server {
         return null;
     }
 
-    public Player register(SocketChannel PlayerSocket, String username, String password) throws Exception {
+    public Player register(Socket PlayerSocket, String username, String password) throws Exception {
 
         if (Objects.equals(username, "BACK") || Objects.equals(password, "BACK"))
             return null;
@@ -322,7 +322,7 @@ public class Server {
         return null;
     }
 
-    public Player reconnect(SocketChannel PlayerSocket, String token) throws Exception {
+    public Player reconnect(Socket PlayerSocket, String token) throws Exception {
 
         this.database_lock.lock();
         Player Player = this.database.reconnect(token, PlayerSocket);
@@ -339,11 +339,11 @@ public class Server {
         return Player;
     }
 
-    public static void request(SocketChannel socket, String requestType, String message) throws Exception {
+    public static void request(Socket socket, String requestType, String message) throws Exception {
         Connection.send(socket, requestType + "\n" + message);
     }
 
-    public void handlePlayer(SocketChannel PlayerSocket) throws Exception {
+    public void handlePlayer(Socket PlayerSocket) throws Exception {
 
         String input;
         Player Player = null;

@@ -1,19 +1,17 @@
 import java.io.*;
-import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Collections;
-
+import java.net.Socket;
 
 class Database {
 
-    private final File file;
-    private final String[] database;
+    private File file;
+    private String[] database;
 
     public Database(String filename) throws IOException {
-
         this.file = new File(filename);
         if (!file.exists()) {
             createEmptyFile();
@@ -23,10 +21,11 @@ class Database {
         BufferedReader reader = new BufferedReader(new FileReader(file));
         String line;
         while ((line = reader.readLine()) != null) {
-            sb.append(line.split(","));
+            sb.append(line).append(",");
         }
         reader.close();
-        this.database = sb.toString();
+        this.database = sb.toString().split(",");
+
     }
 
     private void createEmptyFile() throws IOException {
@@ -34,13 +33,32 @@ class Database {
         writer.close();
     }
 
+    public List<Player> getPlayers() {
+        List<Player> players = new ArrayList<>();
+        for (String o : this.database) {
+            String[] playerData = o.split(",");
+            String username = playerData[0];
+            String password = playerData[1];
+            Float elo = Float.parseFloat(playerData[2]);
+            String token = playerData[3];
+            Player player = new Player(username, password, elo, token, null);
+            players.add(player);
+        }
+        return players;
+    }
+
     public void backup() throws IOException {
+        String[] db = this.database;
         FileWriter writer = new FileWriter(this.file);
-        writer.write(this.database);
+        for (String row : db) {
+            String line = String.join(",", row) + "\n";
+            writer.write(line);
+        }
         writer.close();
     }
 
-    public Player login(String username, String password, String token, SocketChannel socket) {
+
+    public Player login(String username, String password, String token, Socket socket) {
 
         String[] db = this.database;
         for (String obj : db) {
@@ -49,27 +67,36 @@ class Database {
             String storedPassword = playerData[1];
 
             if (storedUsername.equals(username) && password.equals(storedPassword)) {
-                Integer elo = Integer.parseInt(playerData[2]);
-                return new Player(username, storedPassword, token, elo, socket);
+                Float elo = Float.parseFloat(playerData[2]);
+                return new Player(username, storedPassword, elo, token, socket);
             }
         }
 
         return null;
     }
 
-    public Player register(String username, String password, String token, SocketChannel socket) {
+    public Player register(String username, String password, String token, Socket socket) {
         String[] db = this.database;
         if (isUsernameTaken(username, db)) {
             return null; 
         }
 
         Player newPlayer = createPlayer(username, password, token);
-        db.add(newPlayer);
+        String[] newDatabase = new String[this.database.length + 1];
+        System.arraycopy(this.database, 0, newDatabase, 0, this.database.length);
+        newDatabase[this.database.length] = playerToString(newPlayer);
+
+        this.database = newDatabase;
 
         return newPlayer;
     }
 
-    public Player reconnecting(String token, SocketChannel socket) {
+
+    private String playerToString(Player player) {
+        return player.getUsername() + "," + player.getPassword() + "," + player.getElo() + "," + player.getToken();
+    }
+
+    public Player reconnecting(String token, Socket socket) {
         String[] db = this.database;
         for (String obj : db) {
             String[] playerData = obj.split(",");
@@ -78,15 +105,16 @@ class Database {
             if (storedToken.equals(token)) {
                 String username = playerData[0];
                 String password = playerData[1];
-                Integer elo = Integer.parseInt(playerData[2]);
-                return new Player(username, password, storedToken, elo, socket);
+                Float elo = Float.parseFloat(playerData[2]);
+                return new Player(username, password, elo, storedToken, socket);
             }
         }
         return null; 
     }
 
     private boolean isUsernameTaken(String username, String[] dbArray) {
-        for (String playerData : dbArray) {
+        for (String obj : dbArray) {
+            String[] playerData = obj.split(",");
             String storedUsername = playerData[0];
             if (storedUsername.equals(username)) {
                 return true;
@@ -98,7 +126,7 @@ class Database {
     private Player createPlayer(String username, String password, String token) {
         
         String passwordHash = generatePassword(12);
-        Player newPlayer = new Player(username, passwordHash, token, 1400F, null);
+        Player newPlayer = new Player(username, passwordHash, 1400F, token, null);
         return newPlayer;
     }
 
@@ -117,7 +145,7 @@ class Database {
             String username = playerData[0];
             if (username.equals(player.getUsername())) {
 
-                Integer elo = Integer.parseInt(playerData[3]) + value;
+                Float elo = Float.parseFloat(playerData[2]) + value;
                 player.setElo(elo);
                 return;
             }
@@ -142,7 +170,7 @@ class Database {
         String[] db = this.database;
         for (String obj : db) {
             String[] playerData = obj.split(",");
-            Player newPlayer = new Player(playerData[0], playerData[1], playerData[2], Integer.parseInt(playerData[3]), null);
+            Player newPlayer = new Player(playerData[0], playerData[1], Float.parseFloat(playerData[2]), playerData[3], null);
         }
     }
 
@@ -152,17 +180,18 @@ class Database {
         List<Player> userList = new ArrayList<>();
         for (String obj : db) {
             String[] playerData = obj.split(",");
-            Player newPlayer = new Player(playerData[0], playerData[1], playerData[2], Integer.parseInt(playerData[3]), null);
+            Player newPlayer = new Player(playerData[0], playerData[1], Float.parseFloat(playerData[2]), playerData[3], null);
             userList.add(newPlayer);
         
-        userList.sort((a, b) -> Integer.compare(b.getElo(), a.getElo()));
+        userList.sort((a, b) -> Float.compare(b.getElo(), a.getElo()));
         for (int i = 0; i < 5 && i < userList.size(); i++) {
             Player user = userList.get(i);
             String username = user.getUsername();
-            float elo = user.getElo();
+            Float elo = user.getElo();
             eloRanking[i] = username + " - " + elo;
         }
-        return eloRanking;
+       
         }
+        return eloRanking;
     }
 }
