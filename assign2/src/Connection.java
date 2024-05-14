@@ -1,17 +1,20 @@
 import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
+import java.nio.channels.*;
 import java.util.*;
 
 public class Connection {
 
     private final int port;                                 
     private final String host;                            
-    private Socket socket;                           
+    private Socket socket;   
+    private SocketChannel socketChannel;
+    private Selector selector;                        
     private final String TOKEN_PATH = "tokens/";    
     private static final String DEFAULT_HOST = "localhost"; 
     private final long TIMEOUT = 30000;                    
-    private MainMenu MainMenu;                            
+    private MainMenu mainMenu;                            
     private int authenticationOption = 0;
 
     public Connection(int port, String host) {
@@ -37,15 +40,19 @@ public class Connection {
         buffer.clear();                                    
         buffer.put(message.getBytes());                     
         buffer.flip();                                      
-        while (buffer.hasRemaining()) {                    
-            socket.write(buffer);
+        while (buffer.hasRemaining()) {   
+            OutputStream outputStream = socket.getOutputStream();
+            outputStream.write(buffer.array());                 
         }
     }
 
     // Static method to receive a message from a Socket
     public static String receive(Socket socket) throws Exception {
         ByteBuffer buffer = ByteBuffer.allocate(1024);         
-        int bytesRead = socket.read(buffer);                   
+        InputStream inputStream = socket.getInputStream();
+        byte[] byteBuffer = new byte[buffer.capacity()];
+        int bytesRead = inputStream.read(byteBuffer);
+        buffer.put(byteBuffer, 0, bytesRead);             
         return new String(buffer.array(), 0, bytesRead); 
     }
 
@@ -109,7 +116,7 @@ public class Connection {
                 case "OPT" -> { 
                     String menu = String.join("\n", Arrays.copyOfRange(serverAnswer, 1, serverAnswer.length));
                     System.out.println(menu);
-                    Connection.send(this.socket, this.mainMenu());
+                    Connection.send(this.socket, menu);// TODO
                 }
                 case "USR" -> {
 
@@ -187,9 +194,12 @@ public class Connection {
         String requestType = "";
         long lastTime = System.currentTimeMillis();
         long currentTime;
-        Selector selector = Selector.open();
-        this.socket.configureBlocking(false);
-        this.socket.register(selector, SelectionKey.OP_READ);
+        
+        this.socketChannel = SocketChannel.open();
+        socketChannel.configureBlocking(false);
+        this.selector = Selector.open();
+        socketChannel.register(selector, SelectionKey.OP_CONNECT);
+
 
         do {
 
@@ -237,20 +247,16 @@ public class Connection {
     }
 
     public void initGUI() {
-        this.MainMenu = new MainMenu(10000);
+        this.mainMenu = new MainMenu();
     }
 
     public String mainMenuGUI() {
-        authenticationOption = Integer.parseInt(this.MainMenu.mainMenu());
+        authenticationOption = this.mainMenu.MainMenu();
         return Integer.toString(authenticationOption);
     }
 
-    public String[] loginAndRegister(boolean invalidCredentials, boolean takenUsername) {
-        return this.MainMenu.loginAndRegister(invalidCredentials, takenUsername);
-    }
-
     public String getTokenFromGUI(boolean invalidToken) {
-        String[] result = this.MainMenu.reconnect(invalidToken);
+        String[] result = this.mainMenu.reconnect(invalidToken);
 
         if(result[1].equals("BACK"))
             return result[1];
@@ -259,23 +265,23 @@ public class Connection {
     }
 
     public void queueGUI(String serverMessage) {
-        this.MainMenu.queue(serverMessage);
+        this.mainMenu.queue(serverMessage);
     }
 
     public void gameGUI(String[] serverMessages, String requestType) {
         switch (requestType) {
-            case "INFO" -> this.MainMenu.info();
-            case "TURN" -> this.MainMenu.turn();
-            case "SCORE" -> this.MainMenu.updateScore(serverMessages);
+            case "INFO" -> this.mainMenu.info();
+            case "TURN" -> this.mainMenu.turn();
+            case "SCORE" -> this.mainMenu.updateScore(serverMessages);
         }
     }
 
     public String gameOverGUI(String serverMessage) {
-        return this.MainMenu.gameOver(serverMessage);
+        return this.mainMenu.gameOver(serverMessage);
     }
 
     public void closeGUI() {
-        if (this.MainMenu != null) this.MainMenu.close();
+        if (this.mainMenu != null) this.mainMenu.close();
     }
 
     public static void main(String[] args) {

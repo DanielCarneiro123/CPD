@@ -3,7 +3,7 @@ class MainMenu {
     
     Authentication auth = new Authentication();
 
-    public MainMenu() {
+    public Integer MainMenu() {
         System.out.println("Welcome to ChessCHAMP!");
         System.out.println("");
         System.out.println("1. Login");
@@ -12,22 +12,26 @@ class MainMenu {
         System.out.println("Please select an option: ");
 
         Scanner scanner = new Scanner(System.in);
-        int option = scanner.nextInt();
+        Integer option = scanner.nextInt();
 
         switch (option) {
             case 1:
                 new LoginMenu();
+                return option;
                 break;
             case 2:
                 new RegisterMenu();
+                return option;
                 break;
             case 3:
                 System.exit(0);
+                return -1;
                 break;
             default:
                 System.out.println("Invalid option");
                 break;
         }
+        return -1;
     }
 
     
@@ -96,4 +100,7 @@ class MainMenu {
         }
     }
 
+    public void reconnect(boolean Token){
+        
+    }
 }
