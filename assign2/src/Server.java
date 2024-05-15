@@ -1,7 +1,6 @@
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -12,7 +11,7 @@ public class Server {
 
     private final int port;
     private final int mode;
-    private ServerSocket serverSocket;
+    private ServerSocketChannel serverSocket;
     private final ExecutorService threadPoolGame;
     private final ExecutorService threadPoolAuth;
     private int time;
@@ -71,9 +70,8 @@ public class Server {
     }
 
     public void start() throws IOException {
-        this.serverSocket = ServerSocket.open();
-        serverSocket.bind(new InetSocketAddress(this.port));
-        System.out.println("Server is listening on port " + this.port + " with " + (this.mode == 1 ? "rank" : "simple") + " mode");
+        this.serverSocket = ServerSocketChannel.open();
+        this.serverSocket.socket().bind(new InetSocketAddress(this.port));
     }
 
     private void updateServerTime() {
@@ -150,8 +148,8 @@ public class Server {
     private void connectionAuthenticator() {
         while (true) {
             try {
-                Socket PlayerSocket = this.serverSocket.accept();
-                System.out.println("Player connected: " + PlayerSocket.getRemoteAddress());
+                SocketChannel PlayerSocket = this.serverSocket.accept();
+                System.out.println("Player connected: " + PlayerSocket.getInetAddress().getHostAddress());
 
                 Runnable newPlayerRunnable = () -> {
                     try {
@@ -255,14 +253,13 @@ public class Server {
             this.waiting_queue_lock.unlock();
         }
     }
-
     private void sortPlayers() {
         this.waiting_queue_lock.lock();
-        this.waiting_queue.sort(Comparator.comparingLong(Player::getElo));
+        this.waiting_queue.sort(Comparator.comparing(Player::getElo));
         this.waiting_queue_lock.unlock();
     }
 
-    public Player login(Socket PlayerSocket, String username, String password) throws Exception {
+    public Player login(SocketChannel PlayerSocket, String username, String password) throws Exception {
 
         if (Objects.equals(username, "BACK") || Objects.equals(password, "BACK"))
             return null;
@@ -292,7 +289,7 @@ public class Server {
         return null;
     }
 
-    public Player register(Socket PlayerSocket, String username, String password) throws Exception {
+    public Player register(SocketChannel PlayerSocket, String username, String password) throws Exception {
 
         if (Objects.equals(username, "BACK") || Objects.equals(password, "BACK"))
             return null;
@@ -322,7 +319,7 @@ public class Server {
         return null;
     }
 
-    public Player reconnect(Socket PlayerSocket, String token) throws Exception {
+    public Player reconnect(SocketChannel PlayerSocket, String token) throws Exception {
 
         this.database_lock.lock();
         Player Player = this.database.reconnect(token, PlayerSocket);
@@ -339,11 +336,11 @@ public class Server {
         return Player;
     }
 
-    public static void request(Socket socket, String requestType, String message) throws Exception {
+    public static void request(SocketChannel socket, String requestType, String message) throws Exception {
         Connection.send(socket, requestType + "\n" + message);
     }
 
-    public void handlePlayer(Socket PlayerSocket) throws Exception {
+    public void handlePlayer(SocketChannel PlayerSocket) throws Exception {
 
         String input;
         Player Player = null;

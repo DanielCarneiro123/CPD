@@ -123,10 +123,15 @@ class Database {
         return false;
     }
 
-    private Player createPlayer(String username, String password, String token) {
+    private Player createPlayer(String username, String password, String token) throws IOException, FileNotFoundException{
         
         String passwordHash = generatePassword(12);
-        Player newPlayer = new Player(username, passwordHash, 1400F, token, null);
+        Player newPlayer = new Player(username, passwordHash, 1400, token, null);
+        FileWriter writer = new FileWriter("database.csv");
+        writer.write(username + "," + password + "," + 1400 + "," + "" + "\n");
+        writer.close();
+        updateDatabase();
+        backup();
         return newPlayer;
     }
 
@@ -193,5 +198,20 @@ class Database {
        
         }
         return eloRanking;
+    }
+
+    public void updateDatabase() {
+        if (!this.file.exists()) {
+            createEmptyFile();
+        }
+
+        StringBuilder sb = new StringBuilder();
+        BufferedReader reader = new BufferedReader(new FileReader(file));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            sb.append(line).append(",");
+        }
+        reader.close();
+        this.database = sb.toString().split(",");
     }
 }
