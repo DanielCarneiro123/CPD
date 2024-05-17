@@ -3,7 +3,10 @@ import java.net.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+
 public class TimeClient {
+
+    private static String token = null;
 
     public static void main(String[] args) {
         if (args.length < 2)
@@ -11,7 +14,6 @@ public class TimeClient {
 
         String hostname = args[0];
         int port = Integer.parseInt(args[1]);
-        Lock clientLock = new ReentrantLock(); 
 
         try (Socket socket = new Socket(hostname, port)) {
             System.out.println("Connected to server. Enter your username and password:");
@@ -23,35 +25,34 @@ public class TimeClient {
             InputStream input = socket.getInputStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(input));
 
-            String username = consoleReader.readLine();
-            String password = consoleReader.readLine();
-            
-            clientLock.lock(); 
-            try {
+            if (token != null) {
+                writer.println(token);
+            } else {
+                String username = consoleReader.readLine();
+                String password = consoleReader.readLine();
+
+                writer.println("");
                 writer.println(username);
                 writer.println(password);
+            }
 
-                String response = reader.readLine();
-                System.out.println(response);
-                if (response.startsWith("Authenticated")) {
-                    System.out.println("Authentication successful.");
-
-                    System.out.println("Enter your choice (cara ou coroa):");
-                    String choice = consoleReader.readLine();
-                    writer.println(choice);
-                    String result = reader.readLine();
-                    System.out.println("Result: " + result);
-                } else {
-                    System.out.println("Authentication failed: " + response);
+            String response = reader.readLine();
+            if (response.startsWith("Authenticated")) {
+                System.out.println("Authentication successful.");
+                if (token == null) {
+                    token = reader.readLine();
                 }
-            } finally {
-                clientLock.unlock(); 
+                ServerCommunication serverComm = new ServerCommunication(socket, reader, writer, consoleReader);
+                serverComm.run(); 
+            } else {
+                System.out.println("Authentication failed: " + response);
             }
 
         } catch (UnknownHostException ex) {
             System.out.println("Server not found: " + ex.getMessage());
         } catch (IOException ex) {
             System.out.println("I/O error: " + ex.getMessage());
+            ex.printStackTrace();
         }
     }
 }

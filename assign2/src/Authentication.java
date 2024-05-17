@@ -9,12 +9,16 @@ import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.io.*;
+import java.net.*;
 
 
-public class Authentication {
+public class Authentication implements Runnable {
     private static final String DATABASE_FILE = "database.csv";
     private static List<User> users;
     private static final Lock authenticationLock = new ReentrantLock();
+
+    private Socket socket;
 
     private static final SecureRandom secureRandom = new SecureRandom(); 
     private static final Base64.Encoder base64Encoder = Base64.getUrlEncoder(); 
@@ -22,6 +26,10 @@ public class Authentication {
     static {
         users = new ArrayList<>();
         loadUsersFromCSV();
+    }
+
+    public Authentication(Socket socket) {
+        this.socket = socket;
     }
 
     private static void loadUsersFromCSV() {
@@ -96,6 +104,60 @@ public class Authentication {
             }
         }
         return null; 
+    }
+    public static User getUserByToken(String token) {
+        authenticationLock.lock();
+        try {
+            for (User user : users) {
+                if (user.getToken().equals(token)) {
+                    return user;
+                }
+            }
+            return null;
+        } finally {
+            authenticationLock.unlock();
+        }
+    }
+
+    @Override
+    public void run() {
+        try (
+            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+        ) {
+            String token = reader.readLine();
+            User user = Authentication.getUserByToken(token);
+
+            if (user == null) {
+                String username = reader.readLine();
+                String password = reader.readLine();
+                user = processAuthentication(username, password);
+            }
+
+            if (user != null) {
+                user.setSocket(socket); 
+                writer.println("Authenticated");
+                TimeServer.addToWaitingQueue(user); 
+            } else {
+                writer.println("Invalid credentials");
+                socket.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static User processAuthentication(String username, String password) {
+        authenticationLock.lock(); 
+        try {
+            if (authenticate(username, password)) {
+                return getUserByUsername(username);
+            } else {
+                return null;
+            }
+        } finally {
+            authenticationLock.unlock(); 
+        }
     }
 }
 
