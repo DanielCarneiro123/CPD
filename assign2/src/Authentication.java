@@ -121,10 +121,9 @@ public class Authentication implements Runnable {
 
     @Override
     public void run() {
-        try (
+        try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-        ) {
             String token = reader.readLine();
             User user = Authentication.getUserByToken(token);
 
@@ -137,7 +136,7 @@ public class Authentication implements Runnable {
             if (user != null) {
                 user.setSocket(socket); 
                 writer.println("Authenticated");
-                TimeServer.addToWaitingQueue(user); 
+                TimeServer.addToWaitingQueue(user);
             } else {
                 writer.println("Invalid credentials");
                 socket.close();
