@@ -52,4 +52,8 @@ class User {
     public void setSocket(Socket socket) {
         this.socket = socket;
     }
+
+    public void setElo(int elo) {
+        this.elo = elo;
+    }
 }

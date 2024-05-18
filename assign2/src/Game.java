@@ -8,7 +8,7 @@ public class Game implements Runnable {
     private final Random random = new Random();
     private final ReentrantLock lock = new ReentrantLock();
     private Map<User, Integer> scores;
-    private final int rounds = 5; 
+    private final int rounds = 3; 
 
     public Game(List<User> users) {
         this.users = users;
@@ -93,19 +93,23 @@ public class Game implements Runnable {
         for (Map.Entry<User, String> entry : guesses.entrySet()) {
             User user = entry.getKey();
             String guess = entry.getValue();
+            int newScoreAdd = 0;
+            int newScoreSub = 0;
             try {
                 if (!user.getSocket().isClosed()) { 
                     PrintWriter out = new PrintWriter(user.getSocket().getOutputStream(), true);
                     if (guess.equals(result)) {
                         lock.lock();
                         try {
-                            int newScore = scores.get(user) + 1;
-                            scores.put(user, newScore);
+                            newScoreAdd += 10;
+                            scores.put(user, newScoreAdd);
                         } finally {
                             lock.unlock();
                         }
                         out.println("Correct! The coin landed on " + result + ". Your score: " + scores.get(user));
                     } else {
+                        newScoreSub -= 10;
+                        scores.put(user, newScoreSub);
                         out.println("Incorrect! The coin landed on " + result + ". Your score: " + scores.get(user));
                     }
                     out.flush();
@@ -128,6 +132,9 @@ public class Game implements Runnable {
                     for (Map.Entry<User, Integer> entry : scores.entrySet()) {
                         User player = entry.getKey();
                         int score = entry.getValue();
+                        System.out.println(player.getElo());
+                        player.setElo(player.getElo() + score);
+                        System.out.println(player.getElo());
                         out.println("Player " + player.getUsername() + ": " + score);
                     }
                     out.flush();
