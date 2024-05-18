@@ -1,5 +1,6 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -12,14 +13,12 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.io.*;
 import java.net.*;
 
-
 public class Authentication implements Runnable {
     private static final String DATABASE_FILE = "database.csv";
     private static List<User> users;
     private static final Lock authenticationLock = new ReentrantLock();
 
     private Socket socket;
-
     private static final SecureRandom secureRandom = new SecureRandom(); 
     private static final Base64.Encoder base64Encoder = Base64.getUrlEncoder(); 
 
@@ -51,9 +50,8 @@ public class Authentication implements Runnable {
         }
     }
 
-
     public static boolean authenticate(String username, String password) {
-        authenticationLock.lock(); 
+        authenticationLock.lock();
         try {
             for (User user : users) {
                 if (user.getUsername().equals(username)) {
@@ -67,7 +65,33 @@ public class Authentication implements Runnable {
             }
             return false;
         } finally {
-            authenticationLock.unlock(); 
+            authenticationLock.unlock();
+        }
+    }
+
+    public static boolean register(String username, String password) {
+        authenticationLock.lock();
+        try {
+            for (User user : users) {
+                if (user.getUsername().equals(username)) {
+                    return false; 
+                }
+            }
+            String hashedPassword = hashPassword(password);
+            User newUser = new User(username, hashedPassword, 1400, null, null);
+            users.add(newUser);
+            saveUserToCSV(newUser);
+            return true;
+        } finally {
+            authenticationLock.unlock();
+        }
+    }
+
+    private static void saveUserToCSV(User user) {
+        try (FileWriter writer = new FileWriter(DATABASE_FILE, true)) {
+            writer.write(user.getUsername() + "," + user.getPasswordHash() + "," + user.getElo() + "," + user.getToken() + "\n");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -103,8 +127,9 @@ public class Authentication implements Runnable {
                 return user;
             }
         }
-        return null; 
+        return null;
     }
+
     public static User getUserByToken(String token) {
         authenticationLock.lock();
         try {
@@ -124,15 +149,22 @@ public class Authentication implements Runnable {
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-            String token = reader.readLine();
-            User user = Authentication.getUserByToken(token);
+            User user = null;
 
-            if (user == null) {
+            String action = reader.readLine();
+            System.out.println(action);
+            if ("login".equals(action)) {
                 String username = reader.readLine();
                 String password = reader.readLine();
                 user = processAuthentication(username, password);
+            } else if ("register".equals(action)) {
+                String username = reader.readLine();
+                String password = reader.readLine();
+                if (register(username, password)) {
+                    user = getUserByUsername(username);
+                }
             }
-
+            
             if (user != null) {
                 user.setSocket(socket); 
                 writer.println("Authenticated");
@@ -147,7 +179,7 @@ public class Authentication implements Runnable {
     }
 
     private static User processAuthentication(String username, String password) {
-        authenticationLock.lock(); 
+        authenticationLock.lock();
         try {
             if (authenticate(username, password)) {
                 return getUserByUsername(username);
@@ -155,10 +187,7 @@ public class Authentication implements Runnable {
                 return null;
             }
         } finally {
-            authenticationLock.unlock(); 
+            authenticationLock.unlock();
         }
     }
 }
-
-    
-
