@@ -35,13 +35,11 @@ public class TimeClient {
                 writer.println(username);
                 writer.println(password);
             }
-
+            
             String response = reader.readLine();
             if (response.startsWith("Authenticated")) {
                 System.out.println("Authentication successful.");
-                if (token == null) {
-                    token = reader.readLine();
-                }
+                System.out.println("aaa");
                 ServerCommunication serverComm = new ServerCommunication(socket, reader, writer, consoleReader);
                 serverComm.run(); 
             } else {
