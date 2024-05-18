@@ -27,6 +27,13 @@ public class TimeServer {
                 Authentication auth = new Authentication(socket);
                 Thread thread = new Thread(auth);
                 thread.start();
+                try {
+                    thread.join();
+                } catch (InterruptedException e) {
+                    System.err.println("Game thread interrupted: " + e.getMessage());
+                    e.printStackTrace();
+                    Thread.currentThread().interrupt();
+                }
             }
 
         } catch (IOException ex) {
@@ -49,7 +56,15 @@ public class TimeServer {
                     team = new ArrayList<>(waitingQueue.subList(0, TEAM_SIZE));
                 }
                 waitingQueue.removeAll(team);
-                new Thread(new Game(team)).start(); 
+                Thread game = new Thread(new Game(team));
+                game.start(); 
+                try {
+                    game.join();
+                } catch (InterruptedException e) {
+                    System.err.println("Game thread interrupted: " + e.getMessage());
+                    e.printStackTrace();
+                    Thread.currentThread().interrupt();
+                }
             }
         } finally {
             serverLock.unlock();

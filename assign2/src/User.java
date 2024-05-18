@@ -46,7 +46,7 @@ class User {
     }
 
     public Socket getSocket() {
-        return this.socket;
+        return socket;
     }
 
     public void setSocket(Socket socket) {

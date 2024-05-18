@@ -25,29 +25,39 @@ public class ServerCommunication implements Runnable {
 
     public void enterGameQueue() {
         System.out.println("Waiting for the game to start...");
-        while(true){
+        while (true) {
             try {
                 String serverMessage = reader.readLine();
-                System.out.println("Received from server: " + serverMessage);
-                if (!(serverMessage == null)) {
-                    playGame();
+                if (serverMessage != null) {
+                    System.out.println("Received from server: " + serverMessage);
+                    if (serverMessage.equals("Game start!")) {
+                        writer.println("Game start received"); 
+                        writer.flush();
+                        System.out.println("aaaaa"); 
+                        playGame(); 
+                        break;
+                    }
                 }
             } catch (IOException e) {
                 System.out.println("Error while communicating with the server: " + e.getMessage());
                 e.printStackTrace();
-            } 
+                break; 
+            }
         }
     }
 
+
+
     public void playGame() {
-        System.out.println("aaaaaaaaaaa");
+        System.out.println("Playing the game...");
         try {
             String serverMessage;
             while ((serverMessage = reader.readLine()) != null) {
-                System.out.println(serverMessage);
+                System.out.println("Server: " + serverMessage);
                 if (serverMessage.contains("Make your guess")) {
                     String guess = consoleReader.readLine();
                     writer.println(guess);
+                    writer.flush(); 
                 } else if (serverMessage.startsWith("Game over")) {
                     break;
                 }
