@@ -40,7 +40,7 @@ public class GameServer {
         try {
             boolean userExists = false;
             for(User u : waitingQueue) {
-                if(u.getUsername().equals(user.getUsername())) {
+                if(u.getUsername().equals(user.getUsername())) 
                     userExists = true;
             }
             if(!userExists)
