@@ -7,7 +7,10 @@ public class GameClient {
     private static String token = null;
 
     public static void main(String[] args) {
-        if (args.length < 2) return;
+        if (args.length < 2 || args.length > 2 ) {
+            System.out.println("Usage: java GameClient <hostname> <port>");
+            return;
+        }
 
         String hostname = args[0];
         int port = Integer.parseInt(args[1]);
@@ -40,7 +43,7 @@ public class GameClient {
                     writer.println("login");
                     writer.println(username);
                     writer.println(password);
-                    
+
                 } else if (choice.equals("2")) {
                     System.out.println("Enter your desired username:");
                     String username = consoleReader.readLine();
@@ -68,7 +71,7 @@ public class GameClient {
                 if (response != null && (response.startsWith("Authenticated") || response.startsWith("Reconnected"))) {
                     System.out.println("Authentication successful.");
                     ServerCommunication serverComm = new ServerCommunication(socket, reader, writer, consoleReader);
-                    serverComm.run(); 
+                    serverComm.run();
                     break;
                 } else {
                     System.out.println("Authentication failed: " + response);
@@ -77,6 +80,8 @@ public class GameClient {
             if (attempts == 0) {
                 System.out.println("Too many failed attempts. Exiting...");
             }
+            if (scanner != null)
+                scanner.close();
         } catch (UnknownHostException ex) {
             System.out.println("Server not found: " + ex.getMessage());
         } catch (IOException ex) {

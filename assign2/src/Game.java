@@ -3,6 +3,8 @@ import java.net.*;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.xml.crypto.Data;
+
 public class Game implements Runnable {
     private List<User> users;
     private final Random random = new Random();
@@ -125,6 +127,9 @@ public class Game implements Runnable {
                 int score = entry.getValue();
                 player.setElo(player.getElo() + score);
             }
+
+            DatabaseConnection db = new DatabaseConnection();
+            db.updateDB();
         }
         for (User user : users) {
             try {
