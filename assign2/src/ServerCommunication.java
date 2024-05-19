@@ -1,8 +1,6 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-
-import java.io.*;
 import java.net.*;
 
 public class ServerCommunication implements Runnable {
@@ -33,8 +31,11 @@ public class ServerCommunication implements Runnable {
                     if (serverMessage.equals("Game start!")) {
                         writer.println("Game start received"); 
                         writer.flush();
-                        playGame(); 
-                        break;
+                        playGame();
+                        if(!socket.isClosed() && replayGame() == false) {
+                            break;
+                        }
+                        System.out.println("Waiting for new game to start...");
                     }
                 }
             } catch (IOException e) {
@@ -45,8 +46,6 @@ public class ServerCommunication implements Runnable {
         }
     }
 
-
-
     public void playGame() {
         System.out.println("Playing the game...");
         try {
@@ -56,9 +55,10 @@ public class ServerCommunication implements Runnable {
                 if (serverMessage.contains("Make your guess")) {
                     String guess = consoleReader.readLine();
                     writer.println(guess);
-                    writer.flush(); 
+                    writer.flush();
                 } else if (serverMessage.startsWith("Game over")) {
                     printResults();
+                    break;
                 }
             }
         } catch (IOException e) {
@@ -70,12 +70,36 @@ public class ServerCommunication implements Runnable {
     public void printResults() {
         try {
             String serverMessage;
-            while ((serverMessage = reader.readLine()) != null) {
+            while (!(serverMessage = reader.readLine()).equals("Finish")) {
                 System.out.println(serverMessage);
             }
         } catch (IOException e) {
             System.out.println("Error while communicating with the server: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    public boolean replayGame() {
+        System.out.println("Would you like to play again? (y/n)");
+        try {
+            while (true) {
+                String response = consoleReader.readLine();
+
+                if (response.equals("y") || response.equals("n")) {
+                    writer.println(response);
+                    writer.flush();
+                    if (response.equals("y")) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    System.out.println("Invalid response. Please try again.");
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
         }
     }
 }

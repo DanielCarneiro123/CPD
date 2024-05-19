@@ -1,9 +1,6 @@
 import java.io.*;
-import java.net.*;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
-
-import javax.xml.crypto.Data;
 
 public class Game implements Runnable {
     private List<User> users;
@@ -65,10 +62,11 @@ public class Game implements Runnable {
 
         for (User user : users) {
 
-            while(true){
+            while (true) {
                 try {
                     if (!user.getSocket().isClosed()) {
-                        BufferedReader in = new BufferedReader(new InputStreamReader(user.getSocket().getInputStream()));
+                        BufferedReader in = new BufferedReader(
+                                new InputStreamReader(user.getSocket().getInputStream()));
                         PrintWriter out = new PrintWriter(user.getSocket().getOutputStream(), true);
 
                         out.println("Make your guess (cara/coroa):");
@@ -124,7 +122,7 @@ public class Game implements Runnable {
 
     private double calculateEloChange(double playerElo, double opponentElo, double score) {
         double expectedScore = 1 / (1 + Math.pow(10, (opponentElo - playerElo) / 400));
-        double newElo = playerElo + 32 *(score - expectedScore);
+        double newElo = playerElo + 32 * (score - expectedScore);
         return newElo;
     }
 
@@ -133,8 +131,8 @@ public class Game implements Runnable {
             Map<User, Integer> eloChanges = new HashMap<>();
             for (Map.Entry<User, Integer> entry : scores.entrySet()) {
                 User player = entry.getKey();
-                int score = entry.getValue();   
-                if(eloChanges.containsKey(player)) {
+                int score = entry.getValue();
+                if (eloChanges.containsKey(player)) {
                     eloChanges.put(player, eloChanges.get(player) + score);
                 } else {
                     eloChanges.put(player, score);
@@ -150,7 +148,8 @@ public class Game implements Runnable {
                 for (User opponent : scores.keySet()) {
                     if (!opponent.equals(player)) {
                         double opponentElo = opponent.getElo();
-                        eloChange += calculateEloChange(playerElo, opponentElo,score > scores.get(opponent) ? 1 : (score < scores.get(opponent) ? 0 : 0.5));
+                        eloChange += calculateEloChange(playerElo, opponentElo,
+                                score > scores.get(opponent) ? 1 : (score < scores.get(opponent) ? 0 : 0.5));
                     }
                 }
 
@@ -163,7 +162,7 @@ public class Game implements Runnable {
             for (Map.Entry<User, Integer> entry : eloChanges.entrySet()) {
                 User player = entry.getKey();
                 int eloChange = entry.getValue();
-                player.setElo( eloChange);
+                player.setElo(eloChange);
             }
 
             DatabaseConnection db = new DatabaseConnection();
@@ -177,11 +176,17 @@ public class Game implements Runnable {
                     for (Map.Entry<User, Integer> entry : scores.entrySet()) {
                         User player = entry.getKey();
                         int score = entry.getValue();
-                        out.println("Player " + player.getUsername() + ": " + score);
-                        if(rankMode) out.println("Player " + player.getUsername() + " new elo: " + player.getElo());
+
+                        if (rankMode)
+                            out.println("Player " + player.getUsername() + ": " + score + " Elo: " + player.getElo());
+                        else
+                            out.println("Player " + player.getUsername() + ": " + score);
                     }
+                    out.println("Finish");
                     out.flush();
-                    user.getSocket().close();
+
+                    Thread replayGame = new Thread(new ReplayGame(user));
+                    replayGame.start();
                 } else {
                     System.out.println("Socket is closed for user: " + user.getUsername());
                 }

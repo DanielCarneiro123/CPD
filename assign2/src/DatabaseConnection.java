@@ -2,16 +2,12 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.io.*;
-import java.net.*;
 
 public class DatabaseConnection {
     private static final String DATABASE_FILE = "database.csv";
@@ -50,7 +46,8 @@ public class DatabaseConnection {
 
     private static void addUserToCSV(User user) {
         try (FileWriter writer = new FileWriter(DATABASE_FILE, true)) {
-            writer.write("\n" + user.getUsername() + "," + user.getPasswordHash() + "," + user.getElo() + "\n");
+            writer.write("\n" + user.getUsername() + "," + user.getPasswordHash() + "," + user.getElo() + ","
+                    + user.getToken() + "\n");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -66,9 +63,10 @@ public class DatabaseConnection {
         databaseLock.lock();
         try {
             try (FileWriter writer = new FileWriter(DATABASE_FILE)) {
-                writer.write("username,password,elo\n");
+                writer.write("username,password,elo,token\n");
                 for (User user : users) {
-                    writer.write(user.getUsername() + "," + user.getPasswordHash() + "," + user.getElo() + "\n");
+                    writer.write(user.getUsername() + "," + user.getPasswordHash() + "," + user.getElo() + ","
+                            + user.getToken() + "\n");
                 }
             } catch (IOException e) {
                 e.printStackTrace();
