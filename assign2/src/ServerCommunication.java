@@ -59,8 +59,20 @@ public class ServerCommunication implements Runnable {
                     writer.println(guess);
                     writer.flush(); 
                 } else if (serverMessage.startsWith("Game over")) {
-                    break;
+                    printResults();
                 }
+            }
+        } catch (IOException e) {
+            System.out.println("Error while communicating with the server: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public void printResults() {
+        try {
+            String serverMessage;
+            while ((serverMessage = reader.readLine()) != null) {
+                System.out.println(serverMessage);
             }
         } catch (IOException e) {
             System.out.println("Error while communicating with the server: " + e.getMessage());

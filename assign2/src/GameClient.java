@@ -2,7 +2,7 @@ import java.io.*;
 import java.net.*;
 import java.util.Scanner;
 
-public class TimeClient {
+public class GameClient {
 
     private static String token = null;
 
