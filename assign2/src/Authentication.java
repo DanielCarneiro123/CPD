@@ -89,7 +89,7 @@ public class Authentication implements Runnable {
 
     private static void saveUserToCSV(User user) {
         try (FileWriter writer = new FileWriter(DATABASE_FILE, true)) {
-            writer.write(user.getUsername() + "," + user.getPasswordHash() + "," + user.getElo() + "," + user.getToken() + "\n");
+            writer.write("\n" + user.getUsername() + "," + user.getPasswordHash() + "," + user.getElo() + "," + user.getToken() + "\n");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -163,6 +163,17 @@ public class Authentication implements Runnable {
                 if (register(username, password)) {
                     user = getUserByUsername(username);
                 }
+            } else if ("reconnect".equals(action)) {
+                String token = reader.readLine();
+                user = getUserByToken(token);
+                if (user != null) {
+                    user.setSocket(socket);
+                    TimeServer.addToWaitingQueue(user);
+                }
+            } else {
+                writer.println("Invalid action");
+                socket.close();
+                return;
             }
             
             if (user != null) {

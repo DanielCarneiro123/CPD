@@ -25,6 +25,8 @@ public class TimeClient {
                 System.out.println("Choose an option:");
                 System.out.println("1. Login");
                 System.out.println("2. Register");
+                System.out.println("3. Reconnect");
+                System.out.println("4. Exit");
                 System.out.print("Enter choice: ");
                 String choice = scanner.nextLine();
 
@@ -48,6 +50,15 @@ public class TimeClient {
                     writer.println("register");
                     writer.println(username);
                     writer.println(password);
+                } else if (choice.equals("3")) {
+                    System.out.println("Enter your token:");
+                    String token = consoleReader.readLine();
+                    writer.println("reconnect");
+                    writer.println(token);
+                } else if (choice.equals("4")) {
+                    writer.println("exit");
+                    socket.close();
+                    break;
                 } else {
                     System.out.println("Invalid choice. Please try again.");
                     continue;

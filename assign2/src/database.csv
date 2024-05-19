@@ -1,4 +1,5 @@
 username,password,elo,token
 player1,81dc9bdb52d04dc20036dbd8313ed055,1400,""
 player2,81dc9bdb52d04dc20036dbd8313ed055,1500,""
-player3,81dc9bdb52d04dc20036dbd8313ed055,1600,""player4,81dc9bdb52d04dc20036dbd8313ed055,1400,null
+player3,81dc9bdb52d04dc20036dbd8313ed055,1600,""
+player4,81dc9bdb52d04dc20036dbd8313ed055,1400,""

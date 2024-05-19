@@ -38,7 +38,21 @@ public class TimeServer {
     public static void addToWaitingQueue(User user) {
         serverLock.lock();
         try {
-            waitingQueue.add(user);
+            boolean userExists = false;
+            for(User u : waitingQueue) {
+                if(u.getUsername().equals(user.getUsername())) {
+                    try {
+                    u.getSocket().close();
+                    u.setSocket(user.getSocket());
+                    userExists = true;
+                    } catch (IOException e) {
+                        System.err.println("Failed to close socket: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                }
+            }
+            if(!userExists)
+                waitingQueue.add(user);
             System.out.println(waitingQueue.size());
             if (waitingQueue.size() == TEAM_SIZE) {
                 List<User> team;
