@@ -168,7 +168,7 @@ public class Authentication implements Runnable {
             if (user != null) {
                 user.setSocket(socket); 
                 writer.println("Authenticated");
-                TimeServer.addToWaitingQueue(user);
+                GameServer.addToWaitingQueue(user);
             } else {
                 writer.println("Invalid credentials");
                 socket.close();

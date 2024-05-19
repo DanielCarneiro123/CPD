@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class TimeServer {
+public class GameServer {
 
     private static final ReentrantLock serverLock = new ReentrantLock();
     private static final int TEAM_SIZE = 2;
@@ -16,7 +16,7 @@ public class TimeServer {
             return;
 
         int port = Integer.parseInt(args[0]);
-        // rankMode = args.length > 1 && args[1].equalsIgnoreCase("rank");
+        rankMode = Integer.parseInt(args[1]) == 0 ? false : true;
 
         try (ServerSocket serverSocket = new ServerSocket(port)) {
 
@@ -48,15 +48,8 @@ public class TimeServer {
                     team = new ArrayList<>(waitingQueue.subList(0, TEAM_SIZE));
                 }
                 waitingQueue.removeAll(team);
-                Thread game = new Thread(new Game(team));
+                Thread game = new Thread(new Game(team, rankMode));
                 game.start();
-                try {
-                    game.join();
-                } catch (InterruptedException e) {
-                    System.err.println("Game thread interrupted: " + e.getMessage());
-                    e.printStackTrace();
-                    Thread.currentThread().interrupt();
-                }
             }
         } finally {
             serverLock.unlock();
