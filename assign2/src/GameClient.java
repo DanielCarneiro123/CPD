@@ -20,8 +20,8 @@ public class GameClient {
             PrintWriter writer = new PrintWriter(output, true);
             InputStream input = socket.getInputStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-
-            while (true) {
+            int attempts = 3;
+            while (attempts-- >= 0) {
                 System.out.println("Choose an option:");
                 System.out.println("1. Login");
                 System.out.println("2. Register");
@@ -51,10 +51,10 @@ public class GameClient {
                     writer.println(username);
                     writer.println(password);
                 } else if (choice.equals("3")) {
-                    System.out.println("Enter your token:");
-                    String token = consoleReader.readLine();
+                    System.out.println("Enter your username:");
+                    String username = consoleReader.readLine();
                     writer.println("reconnect");
-                    writer.println(token);
+                    writer.println(username);
                 } else if (choice.equals("4")) {
                     writer.println("exit");
                     socket.close();
@@ -65,7 +65,7 @@ public class GameClient {
                 }
 
                 String response = reader.readLine();
-                if (response.startsWith("Authenticated")) {
+                if (response != null && (response.startsWith("Authenticated") || response.startsWith("Reconnected"))) {
                     System.out.println("Authentication successful.");
                     ServerCommunication serverComm = new ServerCommunication(socket, reader, writer, consoleReader);
                     serverComm.run(); 
@@ -73,6 +73,9 @@ public class GameClient {
                 } else {
                     System.out.println("Authentication failed: " + response);
                 }
+            }
+            if (attempts == 0) {
+                System.out.println("Too many failed attempts. Exiting...");
             }
         } catch (UnknownHostException ex) {
             System.out.println("Server not found: " + ex.getMessage());
