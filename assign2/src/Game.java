@@ -64,28 +64,30 @@ public class Game implements Runnable {
         Map<User, String> guesses = new HashMap<>();
 
         for (User user : users) {
-            try {
-                if (!user.getSocket().isClosed()) {
-                    BufferedReader in = new BufferedReader(new InputStreamReader(user.getSocket().getInputStream()));
-                    PrintWriter out = new PrintWriter(user.getSocket().getOutputStream(), true);
 
-                    out.println("Make your guess (cara/coroa):");
-                    out.flush();
-                    String guess = in.readLine().trim().toLowerCase();
+            while(true){
+                try {
+                    if (!user.getSocket().isClosed()) {
+                        BufferedReader in = new BufferedReader(new InputStreamReader(user.getSocket().getInputStream()));
+                        PrintWriter out = new PrintWriter(user.getSocket().getOutputStream(), true);
 
-                    if (guess.equals("cara") || guess.equals("coroa")) {
-                        guesses.put(user, guess);
-                    } else {
-                        out.println("Invalid guess, please enter 'cara' or 'coroa'.");
+                        out.println("Make your guess (cara/coroa):");
                         out.flush();
-                        guess = in.readLine().trim().toLowerCase();
-                        guesses.put(user, guess);
+                        String guess = in.readLine().trim().toLowerCase();
+
+                        if (guess.equals("cara") || guess.equals("coroa")) {
+                            guesses.put(user, guess);
+                            break;
+                        } else {
+                            out.println("Invalid guess, please enter 'cara' or 'coroa'.");
+                            out.flush();
+                        }
+                    } else {
+                        System.out.println("Socket is closed for user: " + user.getUsername());
                     }
-                } else {
-                    System.out.println("Socket is closed for user: " + user.getUsername());
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         }
 
@@ -120,12 +122,48 @@ public class Game implements Runnable {
         }
     }
 
+    private double calculateEloChange(double playerElo, double opponentElo, double score) {
+        double expectedScore = 1 / (1 + Math.pow(10, (opponentElo - playerElo) / 400));
+        double newElo = playerElo + 32 *(score - expectedScore);
+        return newElo;
+    }
+
     private void endGame() {
         if (rankMode) {
+            Map<User, Integer> eloChanges = new HashMap<>();
+            for (Map.Entry<User, Integer> entry : scores.entrySet()) {
+                User player = entry.getKey();
+                int score = entry.getValue();   
+                if(eloChanges.containsKey(player)) {
+                    eloChanges.put(player, eloChanges.get(player) + score);
+                } else {
+                    eloChanges.put(player, score);
+                }
+            }
+
             for (Map.Entry<User, Integer> entry : scores.entrySet()) {
                 User player = entry.getKey();
                 int score = entry.getValue();
-                player.setElo(player.getElo() + score);
+                double playerElo = player.getElo();
+
+                double eloChange = 0;
+                for (User opponent : scores.keySet()) {
+                    if (!opponent.equals(player)) {
+                        double opponentElo = opponent.getElo();
+                        eloChange += calculateEloChange(playerElo, opponentElo,score > scores.get(opponent) ? 1 : (score < scores.get(opponent) ? 0 : 0.5));
+                    }
+                }
+
+                if (eloChanges.containsKey(player)) {
+                    eloChanges.put(player, (int) eloChange);
+                } else {
+                    eloChanges.put(player, (int) eloChange);
+                }
+            }
+            for (Map.Entry<User, Integer> entry : eloChanges.entrySet()) {
+                User player = entry.getKey();
+                int eloChange = entry.getValue();
+                player.setElo( eloChange);
             }
 
             DatabaseConnection db = new DatabaseConnection();
