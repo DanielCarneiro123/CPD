@@ -89,7 +89,7 @@ public class Authentication implements Runnable {
 
     private static void saveUserToCSV(User user) {
         try (FileWriter writer = new FileWriter(DATABASE_FILE, true)) {
-            writer.write(user.getUsername() + "," + user.getPasswordHash() + "," + user.getElo() + "," + user.getToken() + "\n");
+            writer.write("\n" + user.getUsername() + "," + user.getPasswordHash() + "," + user.getElo() + "," + user.getToken() + "\n");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -150,32 +150,56 @@ public class Authentication implements Runnable {
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
             User user = null;
-
-            String action = reader.readLine();
-            System.out.println(action);
-            if ("login".equals(action)) {
-                String username = reader.readLine();
-                String password = reader.readLine();
-                user = processAuthentication(username, password);
-            } else if ("register".equals(action)) {
-                String username = reader.readLine();
-                String password = reader.readLine();
-                if (register(username, password)) {
-                    user = getUserByUsername(username);
+            int attempts = 3;
+            while(attempts-- > 0){
+                String action = reader.readLine();
+                System.out.println(action);
+                if ("login".equals(action)) {
+                    String username = reader.readLine();
+                    String password = reader.readLine();
+                    user = processAuthentication(username, password);
+                } else if ("register".equals(action)) {
+                    String username = reader.readLine();
+                    String password = reader.readLine();
+                    if (register(username, password)) {
+                        user = getUserByUsername(username);
+                    }
+                } else if ("reconnect".equals(action)) {
+                    String username = reader.readLine();
+                    String token = getUserByUsername(username).getToken();
+                    if (token.length() == 32) {
+                        user = getUserByToken(token);
+                        user.getSocket().close();
+                        user.setSocket(socket);
+                        writer.println("Reconnected");
+                        GameServer.addToWaitingQueue(user);
+                        return;
+                    }
+                    else {
+                        writer.println("Session expired");
+                        continue;
+                    }
+                } else {
+                    writer.println("Invalid action");
                 }
+                
+                if (user != null) {
+                    user.setSocket(socket); 
+                    writer.println("Authenticated");
+                    GameServer.addToWaitingQueue(user);
+                    return;
+                } else {
+                    writer.println("Invalid credentials");
+                }
+                }
+                if(attempts == 0){
+                    writer.println("Too many attempts");
+                    socket.close();
+                    return;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            
-            if (user != null) {
-                user.setSocket(socket); 
-                writer.println("Authenticated");
-                GameServer.addToWaitingQueue(user);
-            } else {
-                writer.println("Invalid credentials");
-                socket.close();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     private static User processAuthentication(String username, String password) {

@@ -33,7 +33,6 @@ public class ServerCommunication implements Runnable {
                     if (serverMessage.equals("Game start!")) {
                         writer.println("Game start received"); 
                         writer.flush();
-                        System.out.println("aaaaa"); 
                         playGame(); 
                         break;
                     }

@@ -38,7 +38,13 @@ public class GameServer {
     public static void addToWaitingQueue(User user) {
         serverLock.lock();
         try {
-            waitingQueue.add(user);
+            boolean userExists = false;
+            for(User u : waitingQueue) {
+                if(u.getUsername().equals(user.getUsername())) {
+                    userExists = true;
+            }
+            if(!userExists)
+                waitingQueue.add(user);
             System.out.println(waitingQueue.size());
             if (waitingQueue.size() == TEAM_SIZE) {
                 List<User> team;
