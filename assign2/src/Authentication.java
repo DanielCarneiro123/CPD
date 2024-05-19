@@ -76,7 +76,12 @@ public class Authentication implements Runnable {
                     user = register(username, password);
                 } else if ("reconnect".equals(action)) {
                     String username = reader.readLine();
-                    String token = db.getUserByUsername(username).getToken();
+                    user = db.getUserByUsername(username);
+                    if(user == null){
+                        writer.println("Invalid username");
+                        continue;
+                    }
+                    String token = user.getToken();
                     if (token.length() == 32) {
                         user = db.getUserByToken(token);
                         user.getSocket().close();
