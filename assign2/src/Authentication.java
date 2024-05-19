@@ -89,7 +89,7 @@ public class Authentication implements Runnable {
 
     private static void saveUserToCSV(User user) {
         try (FileWriter writer = new FileWriter(DATABASE_FILE, true)) {
-            writer.write("\n" + user.getUsername() + "," + user.getPasswordHash() + "," + user.getElo() + "," + user.getToken() + "\n");
+            writer.write(user.getUsername() + "," + user.getPasswordHash() + "," + user.getElo() + "," + ""+ "\n");
         } catch (IOException e) {
             e.printStackTrace();
         }
