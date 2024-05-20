@@ -34,7 +34,7 @@ public class DatabaseConnection {
                 String line;
                 while ((line = br.readLine()) != null) {
                     String[] data = line.split(",");
-                    users.add(new User(data[0], data[1], Integer.parseInt(data[2]), data[3], null));
+                    users.add(new User(data[0], data[1], Integer.parseInt(data[2]), "", null));
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -46,8 +46,7 @@ public class DatabaseConnection {
 
     private static void addUserToCSV(User user) {
         try (FileWriter writer = new FileWriter(DATABASE_FILE, true)) {
-            writer.write("\n" + user.getUsername() + "," + user.getPasswordHash() + "," + user.getElo() + ","
-                    + user.getToken() + "\n");
+            writer.write("\n" + user.getUsername() + "," + user.getPasswordHash() + "," + user.getElo() + "\n");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -63,10 +62,10 @@ public class DatabaseConnection {
         databaseLock.lock();
         try {
             try (FileWriter writer = new FileWriter(DATABASE_FILE)) {
-                writer.write("username,password,elo,token\n");
+                writer.write("username,password,elo\n");
                 for (User user : users) {
                     writer.write(user.getUsername() + "," + user.getPasswordHash() + "," + user.getElo() + ","
-                            + user.getToken() + "\n");
+                            + "\n");
                 }
             } catch (IOException e) {
                 e.printStackTrace();

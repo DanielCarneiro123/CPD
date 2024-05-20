@@ -61,6 +61,7 @@ public class GameServer {
         }
     }
 
+
     private static List<User> getBalancedOpp() {
         waitingQueue.sort(Comparator.comparingInt(User::getElo));
         List<User> team = new ArrayList<>();
