@@ -73,6 +73,15 @@ Enter your desired password:
 
 ### Reconnect
 
+If the client disconnects after loggin in, he can choose the option to reconnect. If the session occurs in the same server, the client will be able to return to its position in the waiting queue by writing the username when the server asks. If the token does not exist, the client session will be considered expired.
+
+```bash 
+Enter choice: 3
+Enter your username:
+daniel
+Reconnected
+```
+
 
 ## Playing the game
 
