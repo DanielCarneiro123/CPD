@@ -64,7 +64,7 @@ public class DatabaseConnection {
             try (FileWriter writer = new FileWriter(DATABASE_FILE)) {
                 writer.write("username,password,elo\n");
                 for (User user : users) {
-                    writer.write(user.getUsername() + "," + user.getPasswordHash() + "," + user.getElo() + ","
+                    writer.write(user.getUsername() + "," + user.getPasswordHash() + "," + user.getElo()
                             + "\n");
                 }
             } catch (IOException e) {
