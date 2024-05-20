@@ -1,198 +1,110 @@
-import java.io.*;
-import java.util.*;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.Scanner;
 
-public class Game implements Runnable {
-    private List<User> users;
-    private final Random random = new Random();
-    private final ReentrantLock lock = new ReentrantLock();
-    private Map<User, Integer> scores;
-    private final int rounds = 3;
-    private boolean rankMode;
+public class Game {
+    private static final int BOARD_SIZE = 8;
 
-    public Game(List<User> users, boolean mode) {
-        this.users = users;
-        this.rankMode = mode;
-        this.scores = new HashMap<>();
-        for (User user : users) {
-            scores.put(user, 0);
+    private Scanner scanner = new Scanner(System.in);
+
+    private Board board;
+    private boolean isWhiteTurn;
+    private boolean isGameOver;
+
+    public Game() {
+        board = new Board(BOARD_SIZE);
+        for (int i = 0; i < board.getBoardSize(); i++) {
+            board.setPieceAt(i, 1, 1);
+            board.setPieceAt(i, board.getBoardSize() - 2, 2);
         }
+
+        isWhiteTurn = true;
+        isGameOver = false;
     }
 
-    @Override
-    public void run() {
-        start();
+    public boolean validateAndExecuteMove(String move) {
+        if (move.length() == 4 && move.charAt(1) == 'x') {
+            int endX = move.charAt(2) - 'a';
+            int endY = move.charAt(3) - '1';
+            int startX = move.charAt(0) - 'a';
+            int startY = isWhiteTurn ? endY - 1 : endY + 1;
+
+            if (endX < 0
+                    || endX >= board.getBoardSize()
+                    || endY < 0
+                    || endY >= board.getBoardSize()
+                    || startX < 0
+                    || startX >= board.getBoardSize()
+                    || startY < 0
+                    || startY >= board.getBoardSize()) {
+                return false;
+            }
+
+            if (board.getPieceAt(startX, startY) != 0
+                    && board.hasWhitePiece(startX, startY) == isWhiteTurn
+                    && board.hasWhitePiece(endX, endY) != isWhiteTurn) {
+                board.setPieceAt(endX, endY, board.getPieceAt(startX, startY));
+                board.removePieceAt(startX, startY);
+            } else {
+                return false;
+            }
+
+        } else if (move.length() == 2) {
+            int endX = move.charAt(0) - 'a';
+            int endY = move.charAt(1) - '1';
+            int startX = endX;
+            int startY = isWhiteTurn ? endY - 1 : endY + 1;
+            int altStartY = isWhiteTurn ? endY - 2 : endY + 2;
+
+            if (endX < 0
+                    || endX >= board.getBoardSize()
+                    || endY < 0
+                    || endY >= board.getBoardSize()
+                    || startX < 0
+                    || startX >= board.getBoardSize()
+                    || startY < 0
+                    || startY >= board.getBoardSize()) {
+                return false;
+            }
+
+            if (board.getPieceAt(startX, startY) != 0
+                    && board.hasWhitePiece(startX, startY) == isWhiteTurn
+                    && board.getPieceAt(endX, endY) == 0) {
+                board.setPieceAt(endX, endY, board.getPieceAt(startX, startY));
+                board.removePieceAt(startX, startY);
+            } else if (((endY == 3 && isWhiteTurn) || (endY == BOARD_SIZE - 4 && !isWhiteTurn))
+                    && board.getPieceAt(startX, altStartY) != 0
+                    && board.hasWhitePiece(startX, altStartY) == isWhiteTurn
+                    && board.getPieceAt(startX, startY) == 0
+                    && board.getPieceAt(endX, endY) == 0) {
+                
+                board.setPieceAt(endX, endY, board.getPieceAt(startX, altStartY));
+                board.removePieceAt(startX, altStartY);
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+
+        isWhiteTurn = !isWhiteTurn;
+
+        return true;
     }
 
-    public void start() {
-        System.out.println("Starting game with " + users.size() + " players");
-        notifyGameStart();
-        for (int i = 0; i < rounds; i++) {
-            playRound();
-        }
-        endGame();
+    public String getBoardDisplay() {
+        return board.getBoardDisplay();
     }
 
-    private void notifyGameStart() {
-        for (User user : users) {
-            try {
-                if (!user.getSocket().isClosed()) {
-                    PrintWriter out = new PrintWriter(user.getSocket().getOutputStream(), true);
-                    BufferedReader in = new BufferedReader(new InputStreamReader(user.getSocket().getInputStream()));
-
-                    out.println("Game start!");
-                    out.flush();
-
-                    String confirmation = in.readLine();
-                    if (!"Game start received".equals(confirmation)) {
-                        System.out.println("Failed to receive confirmation from user: " + user.getUsername());
-                    }
-                } else {
-                    System.out.println("Socket is closed for user: " + user.getUsername());
-                }
-            } catch (IOException e) {
-                System.out.println("Failed to send 'Game start!' to user: " + user.getUsername());
-                e.printStackTrace();
+    public boolean isGameOver() {
+        for (int j = 0; j < board.getBoardSize(); j++) {
+            if (board.getPieceAt(j, 0) != 0 || board.getPieceAt(j, board.getBoardSize() - 1) != 0) {
+                return true;
             }
         }
+
+        return false;
     }
 
-    private void playRound() {
-        Map<User, String> guesses = new HashMap<>();
-
-        for (User user : users) {
-
-            while (true) {
-                try {
-                    if (!user.getSocket().isClosed()) {
-                        BufferedReader in = new BufferedReader(
-                                new InputStreamReader(user.getSocket().getInputStream()));
-                        PrintWriter out = new PrintWriter(user.getSocket().getOutputStream(), true);
-
-                        out.println("Make your guess (cara/coroa):");
-                        out.flush();
-                        String guess = in.readLine().trim().toLowerCase();
-
-                        if (guess.equals("cara") || guess.equals("coroa")) {
-                            guesses.put(user, guess);
-                            break;
-                        } else {
-                            out.println("Invalid guess, please enter 'cara' or 'coroa'.");
-                            out.flush();
-                        }
-                    } else {
-                        System.out.println("Socket is closed for user: " + user.getUsername());
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        String result = random.nextBoolean() ? "cara" : "coroa";
-        System.out.println("The coin landed on: " + result);
-
-        for (Map.Entry<User, String> entry : guesses.entrySet()) {
-            User user = entry.getKey();
-            String guess = entry.getValue();
-            try {
-                if (!user.getSocket().isClosed()) {
-                    PrintWriter out = new PrintWriter(user.getSocket().getOutputStream(), true);
-                    if (guess.equals(result)) {
-                        lock.lock();
-                        try {
-                            scores.put(user, scores.get(user) + 10);
-                        } finally {
-                            lock.unlock();
-                        }
-                        out.println("Correct! The coin landed on " + result + ". Your score: " + scores.get(user));
-                    } else {
-                        scores.put(user, scores.get(user) - 10);
-                        out.println("Incorrect! The coin landed on " + result + ". Your score: " + scores.get(user));
-                    }
-                    out.flush();
-                } else {
-                    System.out.println("Socket is closed for user: " + user.getUsername());
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private double calculateEloChange(double playerElo, double opponentElo, double score) {
-        double expectedScore = 1 / (1 + Math.pow(10, (opponentElo - playerElo) / 400));
-        double newElo = playerElo + 32 * (score - expectedScore);
-        return newElo;
-    }
-
-    private void endGame() {
-        if (rankMode) {
-            Map<User, Integer> eloChanges = new HashMap<>();
-            for (Map.Entry<User, Integer> entry : scores.entrySet()) {
-                User player = entry.getKey();
-                int score = entry.getValue();
-                if (eloChanges.containsKey(player)) {
-                    eloChanges.put(player, eloChanges.get(player) + score);
-                } else {
-                    eloChanges.put(player, score);
-                }
-            }
-
-            for (Map.Entry<User, Integer> entry : scores.entrySet()) {
-                User player = entry.getKey();
-                int score = entry.getValue();
-                double playerElo = player.getElo();
-
-                double eloChange = 0;
-                for (User opponent : scores.keySet()) {
-                    if (!opponent.equals(player)) {
-                        double opponentElo = opponent.getElo();
-                        eloChange += calculateEloChange(playerElo, opponentElo,
-                                score > scores.get(opponent) ? 1 : (score < scores.get(opponent) ? 0 : 0.5));
-                    }
-                }
-
-                if (eloChanges.containsKey(player)) {
-                    eloChanges.put(player, (int) eloChange);
-                } else {
-                    eloChanges.put(player, (int) eloChange);
-                }
-            }
-            for (Map.Entry<User, Integer> entry : eloChanges.entrySet()) {
-                User player = entry.getKey();
-                int eloChange = entry.getValue();
-                player.setElo(eloChange);
-            }
-
-            DatabaseConnection db = new DatabaseConnection();
-            db.updateDB();
-        }
-        for (User user : users) {
-            try {
-                if (!user.getSocket().isClosed()) {
-                    PrintWriter out = new PrintWriter(user.getSocket().getOutputStream(), true);
-                    out.println("Game over! Final scores:");
-                    for (Map.Entry<User, Integer> entry : scores.entrySet()) {
-                        User player = entry.getKey();
-                        int score = entry.getValue();
-
-                        if (rankMode)
-                            out.println("Player " + player.getUsername() + ": " + score + " Elo: " + player.getElo());
-                        else
-                            out.println("Player " + player.getUsername() + ": " + score);
-                    }
-                    out.println("Finish");
-                    out.flush();
-
-                    Thread replayGame = new Thread(new ReplayGame(user));
-                    replayGame.start();
-                } else {
-                    System.out.println("Socket is closed for user: " + user.getUsername());
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+    public boolean isWhiteTurn() {
+        return isWhiteTurn;
     }
 }

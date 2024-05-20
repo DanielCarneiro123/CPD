@@ -1,5 +1,3 @@
-package chess;
-
 public class Board {
 
     private final int boardSize;
@@ -40,35 +38,28 @@ public class Board {
         return board[y][x] == 1;
     }
 
-    public void display() {
+    public String getBoardDisplay() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Current board:\n");
         for (int i = boardSize - 1; i >= 0; i--) {
             for (int j = 0; j < boardSize; j++) {
                 if (board[i][j] == 1) {
-                    System.out.print("P ");
+                    sb.append("W ");
                 } else if (board[i][j] == 2) {
-                    System.out.print("p ");
+                    sb.append("B ");
                 } else {
-                    System.out.print(": ");
+                    sb.append(": ");
                 }
             }
-            System.out.println("|" + (char)('1' + i));
+            sb.append("|" + (char)('1' + i) + "\n");
         }
         for (int i = 0; i < boardSize; i++) {
-            System.out.print("--");
+            sb.append("--");
         }
-        System.out.println();
+        sb.append("\n");
         for (int i = 0; i < boardSize; i++) {
-            System.out.print((char)('a' + i) + " ");
+            sb.append((char)('a' + i) + " ");
         }
-        System.out.println();
-    }
-
-    public void printMatrix() {
-        for (int i = 0; i < boardSize; i++) {
-            for (int j = 0; j < boardSize; j++) {
-                System.out.print(board[i][j] + " ");
-            }
-            System.out.println();
-        }
+        return sb.toString();
     }
 }

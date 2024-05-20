@@ -52,11 +52,12 @@ public class ServerCommunication implements Runnable {
             String serverMessage;
             while ((serverMessage = reader.readLine()) != null) {
                 System.out.println("Server: " + serverMessage);
-                if (serverMessage.contains("Make your guess")) {
-                    String guess = consoleReader.readLine();
-                    writer.println(guess);
+                if (serverMessage.startsWith("Make your move")) {
+                    String play = consoleReader.readLine();
+                    writer.println(play);
                     writer.flush();
-                } else if (serverMessage.startsWith("Game over")) {
+                }
+                else if (serverMessage.startsWith("Game over")) {
                     printResults();
                     break;
                 }

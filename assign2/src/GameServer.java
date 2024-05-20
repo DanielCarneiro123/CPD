@@ -53,7 +53,7 @@ public class GameServer {
                     team = new ArrayList<>(waitingQueue.subList(0, TEAM_SIZE));
                 }
                 waitingQueue.removeAll(team);
-                Thread game = new Thread(new Game(team, rankMode));
+                Thread game = new Thread(new GameManager(team, rankMode));
                 game.start();
             }
         } finally {
