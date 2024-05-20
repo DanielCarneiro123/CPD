@@ -29,10 +29,10 @@ public class ServerCommunication implements Runnable {
                 if (serverMessage != null) {
                     System.out.println("Received from server: " + serverMessage);
                     if (serverMessage.equals("Game start!")) {
-                        writer.println("Game start received"); 
+                        writer.println("Game start received");
                         writer.flush();
                         playGame();
-                        if(!socket.isClosed() && replayGame() == false) {
+                        if (!socket.isClosed() && replayGame() == false) {
                             break;
                         }
                         System.out.println("Waiting for new game to start...");
@@ -41,7 +41,7 @@ public class ServerCommunication implements Runnable {
             } catch (IOException e) {
                 System.out.println("Error while communicating with the server: " + e.getMessage());
                 e.printStackTrace();
-                break; 
+                break;
             }
         }
     }
@@ -56,8 +56,7 @@ public class ServerCommunication implements Runnable {
                     String play = consoleReader.readLine();
                     writer.println(play);
                     writer.flush();
-                }
-                else if (serverMessage.startsWith("Game over")) {
+                } else if (serverMessage.startsWith("Game over")) {
                     printResults();
                     break;
                 }

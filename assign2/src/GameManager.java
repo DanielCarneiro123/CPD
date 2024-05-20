@@ -1,14 +1,15 @@
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class GameManager implements Runnable {
     private List<User> users;
-    private final Random random = new Random();
-    private final ReentrantLock lock = new ReentrantLock();
     private boolean rankMode;
 
     private Game game;
+
+    User winner;
+    User loser;
+    boolean gameOver = false;
 
     public GameManager(List<User> users, boolean mode) {
         this.users = users;
@@ -53,7 +54,7 @@ public class GameManager implements Runnable {
     }
 
     private void gameLoop() {
-        while (!game.isGameOver()) {
+        while (!gameOver) {
             String boardDisplay = game.getBoardDisplay();
             for (User user : users) {
                 try {
@@ -80,18 +81,29 @@ public class GameManager implements Runnable {
                     while (true) {
                         out.println("Your turn!\nMake your move in algebraic chess notation (e.g. a2, cxd5):");
                         out.flush();
-                        String move = in.readLine().trim().toLowerCase();
+                        String move = in.readLine();
+
+                        if (move == null) {
+                            System.out.println("Socket is closed for user: " + currentPlayer.getUsername());
+                            loser = currentPlayer;
+                            gameOver = true;
+                            break;
+                        }
 
                         if (!game.validateAndExecuteMove(move)) {
                             out.println("Invalid move, please try again.");
                             out.flush();
                             continue;
                         }
+                        if (game.isGameOver())
+                            gameOver = true;
                         break;
                     }
 
                 } else {
                     System.out.println("Socket is closed for user: " + currentPlayer.getUsername());
+                    loser = currentPlayer;
+                    gameOver = true;
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -122,14 +134,17 @@ public class GameManager implements Runnable {
     }
 
     private void endGame() {
-        User winner = game.isWhiteTurn() ? users.get(1) : users.get(0);
-        User loser = game.isWhiteTurn() ? users.get(0) : users.get(1);
+        if (loser != users.get(0) && loser != users.get(1)) {
+            winner = game.isWhiteTurn() ? users.get(1) : users.get(0);
+            loser = game.isWhiteTurn() ? users.get(0) : users.get(1);
+        } else {
+            winner = users.get(0) == loser ? users.get(1) : users.get(0);
+        }
         if (rankMode) {
             double winnerElo = winner.getElo();
             double loserElo = loser.getElo();
             winner.setElo((int) calculateEloChange(winnerElo, loserElo, 1));
             loser.setElo((int) calculateEloChange(loserElo, winnerElo, 0));
-
 
             DatabaseConnection db = new DatabaseConnection();
             db.updateDB();
@@ -140,7 +155,6 @@ public class GameManager implements Runnable {
                     PrintWriter out = new PrintWriter(user.getSocket().getOutputStream(), true);
                     out.println("Game over!\nWinner: " + winner.getUsername() + "\nLoser: " + loser.getUsername());
                     out.println("Your new elo: " + user.getElo());
-
 
                     out.println("Finish");
                     out.flush();

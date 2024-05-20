@@ -5,7 +5,7 @@ import java.util.Scanner;
 public class GameClient {
 
     public static void main(String[] args) {
-        if (args.length < 2 || args.length > 2 ) {
+        if (args.length < 2 || args.length > 2) {
             System.out.println("Usage: java GameClient <hostname> <port>");
             return;
         }
@@ -75,9 +75,9 @@ public class GameClient {
                     System.out.println("Authentication failed: " + response);
                 }
             }
-            if (attempts == 0) 
+            if (attempts == 0)
                 System.out.println("Too many failed attempts. Exiting...");
-            
+
             if (scanner != null)
                 scanner.close();
         } catch (UnknownHostException ex) {

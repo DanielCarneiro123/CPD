@@ -1,13 +1,8 @@
-import java.util.Scanner;
-
 public class Game {
     private static final int BOARD_SIZE = 8;
 
-    private Scanner scanner = new Scanner(System.in);
-
     private Board board;
     private boolean isWhiteTurn;
-    private boolean isGameOver;
 
     public Game() {
         board = new Board(BOARD_SIZE);
@@ -17,7 +12,6 @@ public class Game {
         }
 
         isWhiteTurn = true;
-        isGameOver = false;
     }
 
     public boolean validateAndExecuteMove(String move) {
@@ -75,7 +69,7 @@ public class Game {
                     && board.hasWhitePiece(startX, altStartY) == isWhiteTurn
                     && board.getPieceAt(startX, startY) == 0
                     && board.getPieceAt(endX, endY) == 0) {
-                
+
                 board.setPieceAt(endX, endY, board.getPieceAt(startX, altStartY));
                 board.removePieceAt(startX, altStartY);
             } else {

@@ -32,33 +32,67 @@ Where `<host>` is the IP address of the server (localhost if running locally) an
 
 ## Authentication and registration
 
-When a client connects to the server, the server will ask the client to authenticate or register. If the client is already registered, the server will ask for their username and password.
+When a client connects to the server, the server will ask the client to authenticate, register, reconnect, or exit.
 
 ```bash
 Choose an option:
 1. Login
 2. Register
+3. Reconnect
+4. Exit
+Enter choice: 
+```
+
+For testing purposes, there are 4 users already registered with the names `player1`, `player2`, `player3` and `player4`. The password for all users is `1234`.
+
+### Login
+
+If the client chooses to login, the server will ask for the username and password. If the credentials are correct, the client will be logged in and will be able to play the game.
+
+```bash
 Enter choice: 1
 Enter your username:
 player1
 Enter your password:
 1234
+Authentication successful.
+Waiting for the game to start...
 ```
 
-For testing purposes, there are 4 users already registered with the names `player1`, `player2`, `player3` and `player4`. The password for all users is `1234`.
+### Register
+
+If the client chooses to register, the server will ask for the username and password. If the username is not already taken, the client will be registered and will be able to play the game.
+
+```bash
+Enter choice: 2 
+Enter your desired username:
+daniel 
+Enter your desired password:
+1234
+```
+
+### Reconnect
+
 
 ## Playing the game
 
-The game is a simple game of heads or tails. Each game is composed of 3 rounds where the server will ask each player to choose between heads or tails.
+The game is a game of Pawn Chess. The game is played on a 8x8 board and follows normal chess rules apart from the fact that there are only pawns on the board. The goal of the game is to get a pawn to the other side of the board. The first player to do so wins the game. En passant does not exist in this version of the game.
+
+The player must insert the move in algebraic notation. For example, to move a pawn from a2 to a4, the player must insert `a4`. To capture an enemy pawn on b4 with a pawn on c3, the player must insert `cxb4`.
 
 ```bash
-Server: Make your guess (cara/coroa):
-```
-
-For each right guess, the player will receive 10 points and will be deducted 10 points for each wrong guess. The player with the most points at the end of the 3 rounds wins the game.
-
-```bash
-Server: Game over! Final scores:
-Player player2: 20
-Player player1: 10
+Server: Current board:
+Server: : : : : : : : : |8
+Server: B B B : B B B B |7
+Server: : : : : : : : : |6
+Server: : : : B : : : : |5
+Server: : : : : W : : : |4
+Server: : : : : : : : : |3
+Server: W W W W : W W W |2
+Server: : : : : : : : : |1
+Server: ----------------
+Server: a b c d e f g h
+Server: Your turn!
+Server: Make your move in algebraic chess notation (e.g. a2, cxd5):
+exd5
 ```

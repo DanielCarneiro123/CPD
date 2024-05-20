@@ -39,13 +39,14 @@ public class GameServer {
         serverLock.lock();
         try {
             boolean userExists = false;
-            for(User u : waitingQueue) {
-                if(u.equals(user)) 
+            for (User u : waitingQueue) {
+                if (u.equals(user))
                     userExists = true;
             }
-            if(!userExists)
+            if (!userExists)
                 waitingQueue.add(user);
-            System.out.println(waitingQueue.size());
+            System.out.println("Added user to waiting queue: " + user.getUsername());
+            System.out.println("Current queue size: " + waitingQueue.size());
             if (waitingQueue.size() >= TEAM_SIZE) {
                 List<User> team;
                 if (rankMode) {
@@ -65,7 +66,7 @@ public class GameServer {
     private static int calculateMaxDifference() {
         long elapsedTime = System.currentTimeMillis() - START_TIME;
         int initialDifference = 200;
-        int increaseRate = 50; 
+        int increaseRate = 50;
 
         int additionalDifference = (int) (elapsedTime / 10000) * increaseRate;
 
@@ -73,8 +74,7 @@ public class GameServer {
     }
 
     private static List<User> getBalancedOpp() {
-        List<User> team = new ArrayList<>();
-        while (true){
+        while (true) {
             waitingQueue.sort(Comparator.comparingInt(User::getElo));
             int maxDifference = calculateMaxDifference();
 
@@ -82,7 +82,7 @@ public class GameServer {
                 int minLevel = waitingQueue.get(i).getElo();
                 int maxLevel = waitingQueue.get(i + TEAM_SIZE - 1).getElo();
                 if (Math.abs(maxLevel - minLevel) <= maxDifference) {
-                    return (team = new ArrayList<>(waitingQueue.subList(i, i + TEAM_SIZE)));
+                    return new ArrayList<>(waitingQueue.subList(i, i + TEAM_SIZE));
                 }
             }
         }

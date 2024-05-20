@@ -12,14 +12,18 @@ public class ReplayGame implements Runnable {
     public void run() {
         try {
             Socket socket = user.getSocket();
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            if (!socket.isClosed()) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-            String response = in.readLine();
-            if (response.equals("y")) {
-                GameServer.addToWaitingQueue(user);
-                return;
-            } else {                                                
-                socket.close();
+                String response = in.readLine();
+                if (response.equals("y")) {
+                    GameServer.addToWaitingQueue(user);
+                    return;
+                } else {
+                    socket.close();
+                }
+            } else {
+                System.out.println("Socket is closed for user: " + user.getUsername());
             }
         } catch (Exception e) {
             e.printStackTrace();

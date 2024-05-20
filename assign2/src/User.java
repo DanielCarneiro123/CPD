@@ -1,13 +1,11 @@
 import java.net.Socket;
 
-
 class User {
     private String username;
     private String passwordHash;
     private int elo;
     private String token;
     private Socket socket;
-
 
     public User(String username, String passwordHash, int elo, String token, Socket socket) {
         this.username = username;
